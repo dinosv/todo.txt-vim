@@ -32,4 +32,33 @@ function M.add_weeks(date_str, weeks)
   return M.add_days(date_str, weeks * 7)
 end
 
+local function days_in_month(year, month)
+  local days = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
+  if month == 2 then
+    local is_leap = (year % 4 == 0 and year % 100 ~= 0) or (year % 400 == 0)
+    return is_leap and 29 or 28
+  end
+  return days[month]
+end
+
+function M.add_months(date_str, months)
+  local y, m, d = M.parse(date_str)
+  if not y then return nil end
+
+  m = m + months
+  while m > 12 do
+    m = m - 12
+    y = y + 1
+  end
+  while m < 1 do
+    m = m + 12
+    y = y - 1
+  end
+
+  local max_day = days_in_month(y, m)
+  d = math.min(d, max_day)
+
+  return M.format(y, m, d)
+end
+
 return M

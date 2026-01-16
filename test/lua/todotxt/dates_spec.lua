@@ -69,4 +69,26 @@ describe("todotxt.dates", function()
       assert.equals("2025-02-12", dates.add_weeks("2025-01-15", 4))
     end)
   end)
+
+  describe("add_months", function()
+    it("adds months within same year", function()
+      assert.equals("2025-04-15", dates.add_months("2025-01-15", 3))
+    end)
+
+    it("rolls over to next year", function()
+      assert.equals("2026-02-15", dates.add_months("2025-11-15", 3))
+    end)
+
+    it("clamps to last day of shorter month", function()
+      assert.equals("2025-02-28", dates.add_months("2025-01-31", 1))
+    end)
+
+    it("handles leap year February", function()
+      assert.equals("2024-02-29", dates.add_months("2024-01-31", 1))
+    end)
+
+    it("handles December to January", function()
+      assert.equals("2026-01-15", dates.add_months("2025-12-15", 1))
+    end)
+  end)
 end)
