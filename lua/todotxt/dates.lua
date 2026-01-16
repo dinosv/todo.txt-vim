@@ -65,4 +65,21 @@ function M.add_years(date_str, years)
   return M.add_months(date_str, years * 12)
 end
 
+function M.parse_pattern(pattern)
+  local strict = false
+  if pattern:sub(1, 1) == "+" then
+    strict = true
+    pattern = pattern:sub(2)
+  end
+
+  local count, unit = pattern:match("^(%d+)([dwmy])$")
+  if not count then return nil end
+
+  return {
+    count = tonumber(count),
+    unit = unit,
+    strict = strict,
+  }
+end
+
 return M
