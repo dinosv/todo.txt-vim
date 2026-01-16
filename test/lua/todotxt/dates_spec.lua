@@ -1,0 +1,10 @@
+describe("todotxt.dates", function()
+  local dates = require("todotxt.dates")
+
+  describe("today", function()
+    it("returns current date in YYYY-MM-DD format", function()
+      local result = dates.today()
+      assert.matches("^%d%d%d%d%-%d%d%-%d%d$", result)
+    end)
+  end)
+end)
