@@ -67,4 +67,44 @@ describe("todotxt.recurrence", function()
       assert.equals("(A) Pay rent rec:1m due:2025-02-15", result)
     end)
   end)
+
+  describe("advance_task", function()
+    local dates = require("todotxt.dates")
+
+    it("advances due date by recurrence pattern (normal)", function()
+      -- Mock today as 2025-01-16
+      local original_today = dates.today
+      dates.today = function() return "2025-01-16" end
+
+      local task = "(A) Pay rent due:2025-01-15 rec:1m"
+      local result = recurrence.advance_task(task)
+      assert.matches("due:2025%-02%-16", result)
+
+      dates.today = original_today
+    end)
+
+    it("advances due date by recurrence pattern (strict)", function()
+      local task = "(A) Pay rent due:2025-01-15 rec:+1m"
+      local result = recurrence.advance_task(task)
+      assert.matches("due:2025%-02%-15", result)
+    end)
+
+    it("preserves gap between t and due", function()
+      local original_today = dates.today
+      dates.today = function() return "2025-01-16" end
+
+      local task = "(A) Pay rent t:2025-01-10 due:2025-01-15 rec:1m"
+      local result = recurrence.advance_task(task)
+      assert.matches("t:2025%-02%-11", result)
+      assert.matches("due:2025%-02%-16", result)
+
+      dates.today = original_today
+    end)
+
+    it("returns nil for non-recurring task", function()
+      local task = "(A) Simple task"
+      local result = recurrence.advance_task(task)
+      assert.is_nil(result)
+    end)
+  end)
 end)

@@ -1,4 +1,5 @@
 local M = {}
+local dates = require("todotxt.dates")
 
 function M.parse_task(line)
   local tags = {}
@@ -26,6 +27,36 @@ function M.set_tag(line, tag, value)
   end
 
   return result
+end
+
+function M.advance_task(line)
+  local tags = M.parse_task(line)
+  if not tags.rec then return nil end
+
+  local pattern = dates.parse_pattern(tags.rec)
+  if not pattern then return nil end
+
+  local base_date
+  if pattern.strict and tags.due then
+    base_date = tags.due
+  else
+    base_date = dates.today()
+  end
+
+  local new_due = dates.add_relative(base_date, tags.rec)
+  if not new_due then return nil end
+
+  local new_task = M.strip_completion(line)
+  new_task = M.set_tag(new_task, "due", new_due)
+
+  -- Preserve threshold-due gap
+  if tags.t and tags.due then
+    local gap = dates.diff_days(tags.t, tags.due)
+    local new_t = dates.add_days(new_due, -gap)
+    new_task = M.set_tag(new_task, "t", new_t)
+  end
+
+  return new_task
 end
 
 return M
