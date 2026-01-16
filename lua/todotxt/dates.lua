@@ -16,4 +16,8 @@ function M.parse(date_str)
   return nil, nil, nil
 end
 
+function M.format(year, month, day)
+  return string.format("%04d-%02d-%02d", year, month, day)
+end
+
 return M
