@@ -61,4 +61,8 @@ function M.add_months(date_str, months)
   return M.format(y, m, d)
 end
 
+function M.add_years(date_str, years)
+  return M.add_months(date_str, years * 12)
+end
+
 return M
