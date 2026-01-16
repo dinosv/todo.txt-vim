@@ -270,3 +270,102 @@ vim.api.nvim_set_hl(0, "TodoHidden", { link = "NonText" })
 highlight TodoHidden guifg=#808080 gui=italic
 highlight TodoRecurring guifg=#d79921 gui=bold
 ```
+
+## Integration Patterns
+
+### telescope.nvim
+
+Find tasks by project or context:
+
+```lua
+-- In your telescope config or keymaps
+vim.keymap.set("n", "<leader>tp", function()
+  require("telescope.builtin").live_grep({
+    prompt_title = "Find by +project",
+    default_text = "+",
+    search_dirs = { vim.fn.expand("~/todo.txt") },
+  })
+end, { desc = "Find tasks by project" })
+
+vim.keymap.set("n", "<leader>tc", function()
+  require("telescope.builtin").live_grep({
+    prompt_title = "Find by @context",
+    default_text = "@",
+    search_dirs = { vim.fn.expand("~/todo.txt") },
+  })
+end, { desc = "Find tasks by context" })
+```
+
+### which-key.nvim
+
+Make mappings discoverable:
+
+```lua
+require("which-key").register({
+  ["<localleader>"] = {
+    x = { name = "Mark done" },
+    s = {
+      name = "Sort",
+      ["+"] = "by +project",
+      ["@"] = "by @context",
+      d = "by date",
+      dd = "by due date",
+    },
+    a = "Priority (A)",
+    b = "Priority (B)",
+    c = "Priority (C)",
+    j = "Priority down",
+    k = "Priority up",
+    d = "Set date",
+    D = "Archive done",
+  },
+}, { buffer = 0 })
+```
+
+### lualine.nvim
+
+Show task counts in status line:
+
+```lua
+-- Helper function (add to your config)
+local function todo_stats()
+  local bufname = vim.fn.expand("%:t")
+  if not bufname:match("todo%.txt$") then return "" end
+
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local total, hidden, done = 0, 0, 0
+
+  local threshold = require("todotxt.threshold")
+  for _, line in ipairs(lines) do
+    if line ~= "" then
+      total = total + 1
+      if line:match("^x%s") then
+        done = done + 1
+      elseif threshold.is_hidden(line) then
+        hidden = hidden + 1
+      end
+    end
+  end
+
+  local active = total - done - hidden
+  return string.format("T:%d H:%d D:%d", active, hidden, done)
+end
+
+-- In lualine setup
+require("lualine").setup({
+  sections = {
+    lualine_x = { todo_stats, "encoding", "fileformat", "filetype" },
+  },
+})
+```
+
+### topydo Coexistence
+
+This plugin uses the same file format as topydo, so both can edit the same files:
+
+- `rec:` tags are compatible
+- `t:` threshold dates are compatible
+- `h:1` hide tags are compatible
+- `due:` dates are compatible
+
+You can use topydo's CLI for quick additions and this plugin for editing.
