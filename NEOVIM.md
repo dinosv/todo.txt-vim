@@ -168,3 +168,38 @@ Useful for template tasks you copy but don't want to see.
 Buy Christmas gifts t:2025-11-01 due:2025-12-20 rec:1y
 ```
 Hidden until November each year.
+
+## Mappings Reference
+
+All mappings use `<localleader>` as prefix. Set your localleader in your config:
+
+```vim
+let maplocalleader = "-"
+```
+
+Or in Lua:
+
+```lua
+vim.g.maplocalleader = "-"
+```
+
+### All Mappings
+
+| Mapping | Mode | Action |
+|---------|------|--------|
+| `<localleader>x` | n | Mark task done (creates recurring if applicable) |
+| `<localleader>x` | v | Mark selected tasks done |
+| `<localleader>X` | n | Mark all tasks done |
+| `<localleader>D` | n | Move completed tasks to done.txt |
+| `<localleader>s` | n, v | Sort + hidden to bottom |
+| `<localleader>s+` | n, v | Sort by +project + hidden to bottom |
+| `<localleader>s@` | n, v | Sort by @context + hidden to bottom |
+| `<localleader>sd` | n, v | Sort by date + hidden to bottom |
+| `<localleader>sdd` | n, v | Sort by due date + hidden to bottom |
+| `<localleader>j` | n | Decrease priority |
+| `<localleader>k` | n | Increase priority |
+| `<localleader>a` | n | Set priority (A) |
+| `<localleader>b` | n | Set priority (B) |
+| `<localleader>c` | n | Set priority (C) |
+| `<localleader>d` | n | Set creation date to today |
+| `date<tab>` | i | Insert current date |
