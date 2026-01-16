@@ -63,4 +63,30 @@ function M.mark_done(line)
   return done, new_task
 end
 
+function M.sort_hidden_to_bottom(first_line, last_line)
+  local lines = vim.api.nvim_buf_get_lines(0, first_line - 1, last_line, false)
+
+  local visible = {}
+  local hidden = {}
+
+  for _, line in ipairs(lines) do
+    if threshold.is_hidden(line) then
+      table.insert(hidden, line)
+    else
+      table.insert(visible, line)
+    end
+  end
+
+  -- Combine: visible first, then hidden
+  local result = {}
+  for _, line in ipairs(visible) do
+    table.insert(result, line)
+  end
+  for _, line in ipairs(hidden) do
+    table.insert(result, line)
+  end
+
+  vim.api.nvim_buf_set_lines(0, first_line - 1, last_line, false, result)
+end
+
 return M

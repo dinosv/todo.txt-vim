@@ -57,3 +57,19 @@ update_highlights()
 -- Set fold options
 vim.opt_local.foldmethod = "expr"
 vim.opt_local.foldexpr = "v:lua.require('todotxt').fold_expr(v:lnum)"
+
+-- Sort and move hidden to bottom
+local function sort_with_hidden(sort_cmd)
+  return function()
+    -- Execute original sort
+    vim.cmd(sort_cmd)
+    -- Move hidden to bottom
+    todotxt.sort_hidden_to_bottom(1, vim.fn.line("$"))
+  end
+end
+
+vim.keymap.set("n", "<localleader>s", sort_with_hidden(":%sort"), { buffer = true })
+vim.keymap.set("n", "<localleader>s@", sort_with_hidden(":%call todo#txt#sort_by_context()"), { buffer = true })
+vim.keymap.set("n", "<localleader>s+", sort_with_hidden(":%call todo#txt#sort_by_project()"), { buffer = true })
+vim.keymap.set("n", "<localleader>sd", sort_with_hidden(":%call todo#txt#sort_by_date()"), { buffer = true })
+vim.keymap.set("n", "<localleader>sdd", sort_with_hidden(":%call todo#txt#sort_by_due_date()"), { buffer = true })
