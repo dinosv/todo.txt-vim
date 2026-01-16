@@ -73,3 +73,23 @@ vim.keymap.set("n", "<localleader>s@", sort_with_hidden(":%call todo#txt#sort_by
 vim.keymap.set("n", "<localleader>s+", sort_with_hidden(":%call todo#txt#sort_by_project()"), { buffer = true })
 vim.keymap.set("n", "<localleader>sd", sort_with_hidden(":%call todo#txt#sort_by_date()"), { buffer = true })
 vim.keymap.set("n", "<localleader>sdd", sort_with_hidden(":%call todo#txt#sort_by_due_date()"), { buffer = true })
+
+-- Visual mode sort and move hidden to bottom within selection
+local function visual_sort_with_hidden(sort_cmd)
+  return function()
+    local start_line = vim.fn.line("'<")
+    local end_line = vim.fn.line("'>")
+
+    -- Execute original sort on range
+    vim.cmd(start_line .. "," .. end_line .. sort_cmd:gsub("^:%%", ""))
+
+    -- Move hidden to bottom within range
+    todotxt.sort_hidden_to_bottom(start_line, end_line)
+  end
+end
+
+vim.keymap.set("v", "<localleader>s", visual_sort_with_hidden(":sort"), { buffer = true })
+vim.keymap.set("v", "<localleader>s@", visual_sort_with_hidden(":call todo#txt#sort_by_context()"), { buffer = true })
+vim.keymap.set("v", "<localleader>s+", visual_sort_with_hidden(":call todo#txt#sort_by_project()"), { buffer = true })
+vim.keymap.set("v", "<localleader>sd", visual_sort_with_hidden(":call todo#txt#sort_by_date()"), { buffer = true })
+vim.keymap.set("v", "<localleader>sdd", visual_sort_with_hidden(":call todo#txt#sort_by_due_date()"), { buffer = true })
