@@ -20,4 +20,12 @@ function M.format(year, month, day)
   return string.format("%04d-%02d-%02d", year, month, day)
 end
 
+function M.add_days(date_str, days)
+  local y, m, d = M.parse(date_str)
+  if not y then return nil end
+  local time = os.time({ year = y, month = m, day = d })
+  local new_time = time + (days * 86400)
+  return os.date("%Y-%m-%d", new_time)
+end
+
 return M

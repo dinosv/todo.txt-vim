@@ -45,4 +45,18 @@ describe("todotxt.dates", function()
       assert.equals("2025-01-05", dates.format(2025, 1, 5))
     end)
   end)
+
+  describe("add_days", function()
+    it("adds days within same month", function()
+      assert.equals("2025-01-15", dates.add_days("2025-01-10", 5))
+    end)
+
+    it("rolls over to next month", function()
+      assert.equals("2025-02-02", dates.add_days("2025-01-30", 3))
+    end)
+
+    it("rolls over year", function()
+      assert.equals("2026-01-01", dates.add_days("2025-12-31", 1))
+    end)
+  end)
 end)
