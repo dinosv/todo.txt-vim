@@ -28,6 +28,26 @@ describe("todotxt.recurrence", function()
     end)
   end)
 
+  describe("strip_completion", function()
+    it("removes x prefix and completion date", function()
+      local task = "x 2025-01-16 Pay rent due:2025-01-15 rec:1m"
+      local result = recurrence.strip_completion(task)
+      assert.equals("Pay rent due:2025-01-15 rec:1m", result)
+    end)
+
+    it("preserves priority", function()
+      local task = "x 2025-01-16 (A) Pay rent due:2025-01-15 rec:1m"
+      local result = recurrence.strip_completion(task)
+      assert.equals("(A) Pay rent due:2025-01-15 rec:1m", result)
+    end)
+
+    it("returns unchanged if not completed", function()
+      local task = "(A) Pay rent due:2025-01-15 rec:1m"
+      local result = recurrence.strip_completion(task)
+      assert.equals("(A) Pay rent due:2025-01-15 rec:1m", result)
+    end)
+  end)
+
   describe("set_tag", function()
     it("updates existing due tag", function()
       local task = "(A) Pay rent due:2025-01-15 rec:1m"

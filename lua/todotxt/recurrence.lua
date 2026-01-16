@@ -10,6 +10,12 @@ function M.parse_task(line)
   return tags
 end
 
+function M.strip_completion(line)
+  -- Match: x YYYY-MM-DD optionally followed by (priority)
+  local result = line:gsub("^x%s+%d%d%d%d%-%d%d%-%d%d%s+", "")
+  return result
+end
+
 function M.set_tag(line, tag, value)
   local pattern = "(%s)" .. tag .. ":[^%s]+"
   local replacement = "%1" .. tag .. ":" .. value
