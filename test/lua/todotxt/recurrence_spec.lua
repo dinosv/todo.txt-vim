@@ -27,4 +27,24 @@ describe("todotxt.recurrence", function()
       assert.is_nil(tags.due)
     end)
   end)
+
+  describe("set_tag", function()
+    it("updates existing due tag", function()
+      local task = "(A) Pay rent due:2025-01-15 rec:1m"
+      local result = recurrence.set_tag(task, "due", "2025-02-15")
+      assert.equals("(A) Pay rent due:2025-02-15 rec:1m", result)
+    end)
+
+    it("updates existing t tag", function()
+      local task = "(A) Pay rent t:2025-01-10 due:2025-01-15"
+      local result = recurrence.set_tag(task, "t", "2025-02-10")
+      assert.equals("(A) Pay rent t:2025-02-10 due:2025-01-15", result)
+    end)
+
+    it("adds tag if not present", function()
+      local task = "(A) Pay rent rec:1m"
+      local result = recurrence.set_tag(task, "due", "2025-02-15")
+      assert.equals("(A) Pay rent rec:1m due:2025-02-15", result)
+    end)
+  end)
 end)

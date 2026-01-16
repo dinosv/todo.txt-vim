@@ -10,4 +10,16 @@ function M.parse_task(line)
   return tags
 end
 
+function M.set_tag(line, tag, value)
+  local pattern = "(%s)" .. tag .. ":[^%s]+"
+  local replacement = "%1" .. tag .. ":" .. value
+
+  local result, count = line:gsub(pattern, replacement)
+  if count == 0 then
+    result = line .. " " .. tag .. ":" .. value
+  end
+
+  return result
+end
+
 return M
