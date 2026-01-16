@@ -165,4 +165,18 @@ describe("todotxt.dates", function()
       assert.is_nil(dates.add_relative("2025-01-15", "invalid"))
     end)
   end)
+
+  describe("diff_days", function()
+    it("returns positive for future date", function()
+      assert.equals(5, dates.diff_days("2025-01-10", "2025-01-15"))
+    end)
+
+    it("returns negative for past date", function()
+      assert.equals(-5, dates.diff_days("2025-01-15", "2025-01-10"))
+    end)
+
+    it("returns zero for same date", function()
+      assert.equals(0, dates.diff_days("2025-01-15", "2025-01-15"))
+    end)
+  end)
 end)

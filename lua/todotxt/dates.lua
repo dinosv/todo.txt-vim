@@ -99,4 +99,15 @@ function M.add_relative(date_str, pattern)
   return nil
 end
 
+function M.diff_days(from_date, to_date)
+  local y1, m1, d1 = M.parse(from_date)
+  local y2, m2, d2 = M.parse(to_date)
+  if not y1 or not y2 then return nil end
+
+  local t1 = os.time({ year = y1, month = m1, day = d1 })
+  local t2 = os.time({ year = y2, month = m2, day = d2 })
+
+  return math.floor((t2 - t1) / 86400)
+end
+
 return M
