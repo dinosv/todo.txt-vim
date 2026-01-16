@@ -428,3 +428,68 @@ Birthday: Mum t:2025-03-01 due:2025-03-15 rec:1y @annual
 
 - Hidden until preparation period
 - Annual recurrence with strict dates
+
+## Troubleshooting
+
+### Common Issues
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Recurring not working | Wrong branch | Ensure using `nvim` branch, not `master` |
+| Recurring not working | Old Neovim | Requires Neovim 0.7+, check `:version` |
+| Recurring not working | setup() not called | Add `require("todotxt").setup()` to config |
+| Tasks not hiding | Wrong date format | Use `YYYY-MM-DD` format (e.g., `t:2025-01-15`) |
+| Tasks not hiding | Date not in future | Check `t:` date is after today |
+| Highlights not showing | No termguicolors | Add `set termguicolors` or `vim.opt.termguicolors = true` |
+| Highlights not showing | setup() not called | Add `require("todotxt").setup()` to config |
+| Folds not working | foldmethod overridden | Remove other foldmethod settings for todo files |
+| Folds not working | threshold_fold disabled | Check `threshold_fold = true` in setup |
+
+### Debug Checklist
+
+**1. Verify Neovim version:**
+```vim
+:version
+```
+Look for `NVIM v0.7` or higher.
+
+**2. Verify branch:**
+```bash
+cd ~/.vim/plugged/todo.txt-vim  # or your plugin path
+git branch
+```
+Should show `* nvim`.
+
+**3. Verify module loads:**
+```vim
+:lua print(vim.inspect(require("todotxt")))
+```
+Should print table with `setup`, `mark_done`, etc.
+
+**4. Verify config:**
+```vim
+:lua print(vim.inspect(require("todotxt").config))
+```
+Should show `auto_recur`, `threshold_fold`, `threshold_highlight`.
+
+**5. Verify ftplugin loaded:**
+```vim
+:scriptnames
+```
+Look for `ftplugin/todo.lua` in the list.
+
+**6. Check for errors:**
+```vim
+:messages
+```
+Look for Lua errors related to todotxt.
+
+### Version Compatibility
+
+| Neovim Version | Status |
+|----------------|--------|
+| 0.7.x | Supported |
+| 0.8.x | Supported |
+| 0.9.x | Supported |
+| 0.10.x | Supported |
+| < 0.7 | Not supported (use master branch) |
