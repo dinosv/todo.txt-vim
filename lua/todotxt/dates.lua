@@ -28,4 +28,8 @@ function M.add_days(date_str, days)
   return os.date("%Y-%m-%d", new_time)
 end
 
+function M.add_weeks(date_str, weeks)
+  return M.add_days(date_str, weeks * 7)
+end
+
 return M
