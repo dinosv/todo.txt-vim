@@ -71,5 +71,65 @@ for compatibility with other todo.txt editors, or as a matter of preference:
 
    Default: Done.txt or done.txt based on todo.txt capitalization.
 
+==============================================================================
+NEOVIM LUA FEATURES                                      *todo-txt-neovim*
+
+When using Neovim (0.7+), additional features are available:
+
+RECURRING TASKS                                          *todo-txt-recurring*
+
+Tasks with a `rec:` tag will automatically create a new task when marked done.
+
+Patterns:
+  `rec:Nd`    - N days (e.g., rec:1d, rec:7d)
+  `rec:Nw`    - N weeks (e.g., rec:1w, rec:2w)
+  `rec:Nm`    - N months (e.g., rec:1m, rec:3m)
+  `rec:Ny`    - N years (e.g., rec:1y)
+
+Modes:
+  `rec:1w`    - Normal: new due date from today
+  `rec:+1w`   - Strict: new due date from original due date
+
+If the task has both `t:` (threshold) and `due:` tags, the gap between them
+is preserved in the new task.
+
+Example: >
+  (A) Pay rent t:2025-01-10 due:2025-01-15 rec:1m
+<
+After marking done becomes: >
+  x 2025-01-16 Pay rent t:2025-01-10 due:2025-01-15 rec:1m
+  (A) Pay rent t:2025-02-11 due:2025-02-16 rec:1m
+<
+
+HIDDEN TASKS                                             *todo-txt-hidden*
+
+Tasks are hidden if they have:
+  - Future threshold: `t:YYYY-MM-DD` where date > today
+  - Explicit hide tag: `h:1` or `hide:1`
+
+Hidden tasks:
+  - Appear dimmed (linked to Comment highlight group)
+  - Auto-fold at level 1 (with completed tasks)
+  - Sort to bottom when using sort mappings
+
+CONFIGURATION                                            *todo-txt-config*
+
+Configure in your init.lua: >
+  require('todotxt').setup({
+    auto_recur = true,          -- auto-create recurring on mark done
+    threshold_fold = true,      -- fold future threshold tasks
+    threshold_highlight = true, -- dim hidden tasks
+  })
+<
+
+HIGHLIGHT GROUPS                                         *todo-txt-highlights*
+
+  TodoHidden      - Hidden tasks (default: links to Comment)
+  TodoRecurring   - Tasks with rec: tag (default: links to Special)
+
+Override in your colorscheme: >
+  vim.api.nvim_set_hl(0, "TodoHidden", { fg = "#808080", italic = true })
+<
+
 ===============================================================================
 vim:ft=help:et:ts=2:sw=2:sts=2:norl
