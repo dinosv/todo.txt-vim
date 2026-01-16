@@ -23,6 +23,32 @@ vim.keymap.set("n", "<localleader>x", function()
   end
 end, { buffer = true, desc = "Mark todo as done" })
 
+-- Visual mode mark done mapping
+vim.keymap.set("v", "<localleader>x", function()
+  local start_line = vim.fn.line("'<")
+  local end_line = vim.fn.line("'>")
+
+  local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+  local result = {}
+  local new_tasks = {}
+
+  for _, line in ipairs(lines) do
+    local done, new_task = todotxt.mark_done(line)
+    table.insert(result, done)
+    if new_task then
+      table.insert(new_tasks, new_task)
+    end
+  end
+
+  -- Replace selected lines with done tasks
+  vim.api.nvim_buf_set_lines(0, start_line - 1, end_line, false, result)
+
+  -- Insert new recurring tasks after the last done task
+  if #new_tasks > 0 then
+    vim.api.nvim_buf_set_lines(0, end_line, end_line, false, new_tasks)
+  end
+end, { buffer = true, desc = "Mark selected todos as done" })
+
 -- Define highlight group
 vim.api.nvim_set_hl(0, "TodoHidden", { link = "Comment", default = true })
 vim.api.nvim_set_hl(0, "TodoRecurring", { link = "Special", default = true })
