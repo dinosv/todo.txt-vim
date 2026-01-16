@@ -82,4 +82,21 @@ function M.parse_pattern(pattern)
   }
 end
 
+function M.add_relative(date_str, pattern)
+  local p = M.parse_pattern(pattern)
+  if not p then return nil end
+
+  if p.unit == "d" then
+    return M.add_days(date_str, p.count)
+  elseif p.unit == "w" then
+    return M.add_weeks(date_str, p.count)
+  elseif p.unit == "m" then
+    return M.add_months(date_str, p.count)
+  elseif p.unit == "y" then
+    return M.add_years(date_str, p.count)
+  end
+
+  return nil
+end
+
 return M

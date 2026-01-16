@@ -139,4 +139,30 @@ describe("todotxt.dates", function()
       assert.is_nil(dates.parse_pattern("invalid"))
     end)
   end)
+
+  describe("add_relative", function()
+    it("adds days with pattern", function()
+      assert.equals("2025-01-20", dates.add_relative("2025-01-15", "5d"))
+    end)
+
+    it("adds weeks with pattern", function()
+      assert.equals("2025-01-29", dates.add_relative("2025-01-15", "2w"))
+    end)
+
+    it("adds months with pattern", function()
+      assert.equals("2025-04-15", dates.add_relative("2025-01-15", "3m"))
+    end)
+
+    it("adds years with pattern", function()
+      assert.equals("2026-01-15", dates.add_relative("2025-01-15", "1y"))
+    end)
+
+    it("handles strict prefix (returns same result)", function()
+      assert.equals("2025-01-22", dates.add_relative("2025-01-15", "+1w"))
+    end)
+
+    it("returns nil for invalid pattern", function()
+      assert.is_nil(dates.add_relative("2025-01-15", "invalid"))
+    end)
+  end)
 end)
