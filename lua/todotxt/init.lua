@@ -15,6 +15,33 @@ function M.setup(opts)
   M.config = vim.tbl_deep_extend("force", M.config, opts)
 end
 
+local threshold = require("todotxt.threshold")
+
+function M.fold_expr(lnum)
+  if not M.config.threshold_fold then
+    -- Fall back to original fold (completed tasks)
+    local line = vim.fn.getline(lnum)
+    if line:match("^[xX]%s") then
+      return 1
+    end
+    return 0
+  end
+
+  local line = vim.fn.getline(lnum)
+
+  -- Completed tasks
+  if line:match("^[xX]%s") then
+    return 1
+  end
+
+  -- Hidden tasks
+  if threshold.is_hidden(line) then
+    return 1
+  end
+
+  return 0
+end
+
 function M.mark_done(line)
   -- Strip existing priority
   local priority = line:match("^%((%a)%)")

@@ -53,3 +53,7 @@ vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "TextChangedI" }, {
 
 -- Initial highlight
 update_highlights()
+
+-- Set fold options
+vim.opt_local.foldmethod = "expr"
+vim.opt_local.foldexpr = "v:lua.require('todotxt').fold_expr(v:lnum)"
