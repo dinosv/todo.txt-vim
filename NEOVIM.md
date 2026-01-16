@@ -128,3 +128,43 @@ Weekly review @personal due:2025-01-17 rec:+1w
 ```
 (A) Pay rent t:2025-01-10 due:2025-01-15 rec:1m
 ```
+
+## Hidden Tasks
+
+Tasks can be hidden from view to reduce clutter. Hidden tasks are visually dimmed, auto-folded, and sorted to the bottom.
+
+### Trigger Conditions
+
+| Condition | Example | When hidden |
+|-----------|---------|-------------|
+| Future threshold | `t:2025-02-01` | Until 2025-02-01 |
+| Explicit hide tag | `h:1` | Always |
+| Explicit hide tag | `hide:1` | Always |
+
+### Visual Behaviour
+
+| Behaviour | Default | Controlled by |
+|-----------|---------|---------------|
+| Dimmed text | Yes (Comment highlight) | `threshold_highlight` option |
+| Auto-folded | Yes (fold level 1) | `threshold_fold` option |
+| Sort to bottom | Yes | Built into sort mappings |
+
+### Examples
+
+**Task hidden until start date:**
+```
+Prepare quarterly report t:2025-03-15 due:2025-03-31 +reports
+```
+This task won't clutter your view until 15 March.
+
+**Permanently hidden task:**
+```
+Template: New project checklist h:1
+```
+Useful for template tasks you copy but don't want to see.
+
+**Seasonal task:**
+```
+Buy Christmas gifts t:2025-11-01 due:2025-12-20 rec:1y
+```
+Hidden until November each year.
