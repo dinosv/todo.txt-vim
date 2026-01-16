@@ -203,3 +203,70 @@ vim.g.maplocalleader = "-"
 | `<localleader>c` | n | Set priority (C) |
 | `<localleader>d` | n | Set creation date to today |
 | `date<tab>` | i | Insert current date |
+
+## Configuration
+
+### Options Reference
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `auto_recur` | boolean | `true` | Create new task when marking recurring task done |
+| `threshold_fold` | boolean | `true` | Auto-fold hidden and completed tasks |
+| `threshold_highlight` | boolean | `true` | Dim hidden tasks |
+
+### Setup Examples
+
+**Minimal (all defaults):**
+```lua
+require("todotxt").setup()
+```
+
+**Explicit configuration:**
+```lua
+require("todotxt").setup({
+  auto_recur = true,
+  threshold_fold = true,
+  threshold_highlight = true,
+})
+```
+
+**Disable auto-folding:**
+```lua
+require("todotxt").setup({
+  threshold_fold = false,
+})
+```
+
+**Disable recurring (manual workflow):**
+```lua
+require("todotxt").setup({
+  auto_recur = false,
+})
+```
+
+### Highlight Groups
+
+| Group | Default | Purpose |
+|-------|---------|---------|
+| `TodoHidden` | links to `Comment` | Hidden tasks (future threshold or h:1) |
+| `TodoRecurring` | links to `Special` | Tasks with rec: tag |
+
+### Highlight Customisation
+
+**In init.lua:**
+```lua
+vim.api.nvim_set_hl(0, "TodoHidden", { fg = "#808080", italic = true })
+vim.api.nvim_set_hl(0, "TodoRecurring", { fg = "#d79921", bold = true })
+```
+
+**In a colorscheme file:**
+```lua
+-- after/colors/myscheme.lua
+vim.api.nvim_set_hl(0, "TodoHidden", { link = "NonText" })
+```
+
+**Using highlight command:**
+```vim
+highlight TodoHidden guifg=#808080 gui=italic
+highlight TodoRecurring guifg=#d79921 gui=bold
+```
