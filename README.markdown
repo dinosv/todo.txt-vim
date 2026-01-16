@@ -52,3 +52,27 @@ This plugin detects any text file with the name todo.txt or done.txt with an opt
 
 If you want the help installed, run ":helptags ~/.vim/doc" inside vim after having copied the files.
 Then you will be able to get the commands help with: `:h todo.txt`.
+
+### Neovim Lua Features
+
+When using Neovim 0.7+, additional features are automatically enabled:
+
+**Recurring Tasks** - Tasks with `rec:` tag auto-create the next occurrence:
+- `rec:1d`, `rec:1w`, `rec:1m`, `rec:1y` - daily, weekly, monthly, yearly
+- `rec:+1w` - strict mode (from original due date)
+
+**Hidden Tasks** - Tasks with future `t:` date or `h:1` tag:
+- Appear dimmed
+- Auto-fold
+- Sort to bottom
+
+**Configuration:**
+```lua
+require('todotxt').setup({
+  auto_recur = true,
+  threshold_fold = true,
+  threshold_highlight = true,
+})
+```
+
+See `:help todo-txt-neovim` for details.
