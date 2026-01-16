@@ -369,3 +369,62 @@ This plugin uses the same file format as topydo, so both can edit the same files
 - `due:` dates are compatible
 
 You can use topydo's CLI for quick additions and this plugin for editing.
+
+## Workflow Examples
+
+### Weekly Review Pattern
+
+Set up tasks that appear only on review day:
+
+```
+Weekly review @personal t:2025-01-17 due:2025-01-17 rec:+1w
+Review project goals @work t:2025-01-17 due:2025-01-17 rec:+1w
+Check budget @finance t:2025-01-17 due:2025-01-17 rec:+1w
+```
+
+- Hidden until Friday (threshold = due date)
+- Strict recurrence keeps them on Friday
+- All appear together for batch processing
+
+### Bill Payment Tracking
+
+Track recurring bills with advance notice:
+
+```
+(A) Pay rent t:2025-01-10 due:2025-01-15 rec:1m @bills
+(B) Pay electricity t:2025-01-18 due:2025-01-23 rec:1m @bills
+(B) Pay internet t:2025-01-01 due:2025-01-05 rec:1m @bills
+```
+
+- Threshold gives 5-day advance warning
+- Priority (A) for important bills
+- `@bills` context for filtering
+
+### Project Templates
+
+Keep template tasks hidden but available:
+
+```
+Template: New feature checklist h:1 +templates
+  [ ] Write spec h:1 +templates
+  [ ] Create branch h:1 +templates
+  [ ] Write tests h:1 +templates
+  [ ] Implement h:1 +templates
+  [ ] Code review h:1 +templates
+  [ ] Merge h:1 +templates
+```
+
+Copy lines as needed, remove `h:1` to make visible.
+
+### Seasonal Tasks
+
+Tasks that recur annually with preparation time:
+
+```
+File taxes t:2025-02-01 due:2025-04-15 rec:1y @annual
+Christmas shopping t:2025-11-01 due:2025-12-20 rec:1y @annual
+Birthday: Mum t:2025-03-01 due:2025-03-15 rec:1y @annual
+```
+
+- Hidden until preparation period
+- Annual recurrence with strict dates
