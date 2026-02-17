@@ -3,4 +3,5 @@ doc/tags
 *.pyc
 .claude
 .serena
+CLAUDE.md
 topydo
