@@ -119,3 +119,9 @@ vim.keymap.set("v", "<localleader>s@", visual_sort_with_hidden(":call todo#txt#s
 vim.keymap.set("v", "<localleader>s+", visual_sort_with_hidden(":call todo#txt#sort_by_project()"), { buffer = true })
 vim.keymap.set("v", "<localleader>sd", visual_sort_with_hidden(":call todo#txt#sort_by_date()"), { buffer = true })
 vim.keymap.set("v", "<localleader>sdd", visual_sort_with_hidden(":call todo#txt#sort_by_due_date()"), { buffer = true })
+
+-- Wiki navigation
+local wiki = require("todotxt.wiki")
+vim.keymap.set("n", "<localleader>wp", wiki.goto_project, { buffer = true, desc = "Go to project wiki" })
+vim.keymap.set("n", "<localleader>wc", wiki.create_project, { buffer = true, desc = "Create project wiki" })
+vim.keymap.set("n", "<localleader>wl", wiki.list_projects, { buffer = true, desc = "List project wiki status" })
