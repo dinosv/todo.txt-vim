@@ -58,8 +58,23 @@ todo.txt-vim/
 - `due:YYYY-MM-DD`: Due date.
 - `t:YYYY-MM-DD`: Threshold date (task hidden until this date).
 - `rec:+1w`: Recurrence pattern (strict mode with `+`).
-- `wf:1`: Waiting-for flag.
-- `h:1`: Hidden flag.
+- `wf:1`: Waiting-for flag. Entire line highlighted with `TodoWaitingFor` (linked to `DiagnosticWarn`). Defined in `syntax/todo.vim`. Task keeps its position (not folded/hidden).
+- `h:1`: Hidden flag. Entire line highlighted with `TodoHidden` (linked to `Comment`). Defined in `ftplugin/todo.lua` via extmarks. Task is folded and sorted to bottom.
+
+## Syntax highlighting
+
+Defined in `syntax/todo.vim`. Key highlight groups:
+
+| Group | Linked to | Purpose |
+|-------|-----------|---------|
+| `TodoDone` | `Comment` | Completed tasks (`x ...`) |
+| `TodoWaitingFor` | `DiagnosticWarn` | Waiting-for tasks (`wf:1`) |
+| `TodoPriorityA` | `Constant` | Priority (A) tasks |
+| `TodoPriorityB` | `Statement` | Priority (B) tasks |
+| `TodoPriorityC` | `Identifier` | Priority (C) tasks |
+| `TodoHidden` | `Comment` | Hidden/threshold tasks (via extmarks in `ftplugin/todo.lua`) |
+
+`TodoWaitingFor` is defined after priority rules in `syntax/todo.vim` so it overrides priority colours for `wf:1` lines.
 
 ---
 

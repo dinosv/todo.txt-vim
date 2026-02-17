@@ -52,7 +52,6 @@ end, { buffer = true, desc = "Mark selected todos as done" })
 -- Define highlight group
 vim.api.nvim_set_hl(0, "TodoHidden", { link = "Comment", default = true })
 vim.api.nvim_set_hl(0, "TodoRecurring", { link = "Special", default = true })
-vim.api.nvim_set_hl(0, "TodoWaitingFor", { fg = "#5fafaf", default = true })
 
 -- Namespace for our highlights
 local ns = vim.api.nvim_create_namespace("todotxt")
@@ -68,8 +67,6 @@ local function update_highlights()
   for i, line in ipairs(lines) do
     if threshold.is_hidden(line) then
       vim.api.nvim_buf_add_highlight(0, ns, "TodoHidden", i - 1, 0, -1)
-    elseif line:match("%swf:1") or line:match("^wf:1") then
-      vim.api.nvim_buf_add_highlight(0, ns, "TodoWaitingFor", i - 1, 0, -1)
     end
   end
 end
