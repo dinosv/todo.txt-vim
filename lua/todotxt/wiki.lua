@@ -50,7 +50,7 @@ function M.create_project()
       "Descripcion breve. Cliente, objetivo, alcance.",
       "",
       "## Acciones activas",
-      "Ver: `grep '+" .. tag .. "' ~/00000_DATA/00000_GITHUB/00000_SYNC/010_TODOTXT/todo.txt`",
+      "Ver: `grep '+" .. tag .. "' " .. cfg.todo_file .. "`",
       "",
       "## Notas y decisiones",
       "",
@@ -59,7 +59,7 @@ function M.create_project()
     vim.fn.writefile(template, path)
   end
 
-  vim.cmd("edit " .. vim.fn.fnameescape(path))
+  vim.cmd("tabedit " .. vim.fn.fnameescape(path))
 end
 
 function M.list_projects()
@@ -134,6 +134,33 @@ function M.list_projects()
 
   vim.keymap.set("n", "q", close, { buffer = buf })
   vim.keymap.set("n", "<Esc>", close, { buffer = buf })
+  vim.keymap.set("n", "<CR>", function()
+    local cur = vim.api.nvim_get_current_line()
+    local tag = cur:match("^%+(%S+)")
+    if not tag then return end
+    close()
+    local path = cfg.wiki_projects_dir .. tag .. cfg.wiki_ext
+    if vim.fn.filereadable(path) ~= 1 then
+      if vim.fn.isdirectory(cfg.wiki_projects_dir) == 0 then
+        vim.fn.mkdir(cfg.wiki_projects_dir, "p")
+      end
+      local template = {
+        "# " .. tag,
+        "",
+        "## Contexto",
+        "Descripcion breve. Cliente, objetivo, alcance.",
+        "",
+        "## Acciones activas",
+        "Ver: `grep '+" .. tag .. "' " .. cfg.todo_file .. "`",
+        "",
+        "## Notas y decisiones",
+        "",
+        "## Referencias",
+      }
+      vim.fn.writefile(template, path)
+    end
+    vim.cmd("tabedit " .. vim.fn.fnameescape(path))
+  end, { buffer = buf })
 end
 
 return M
