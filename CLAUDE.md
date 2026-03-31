@@ -55,7 +55,7 @@ todo.txt-vim/
 
 - `+project_tag`: Project identifier. MUST match wiki filename (see below).
 - `@context`: Location/mode (`@UDD`, `@casa`).
-- `due:YYYY-MM-DD`: Due date.
+- `due:YYYY-MM-DD`: Due date. Overdue dates (past due, active tasks only) highlighted with `TodoOverdue` (red background, via extmarks in `ftplugin/todo.lua`).
 - `t:YYYY-MM-DD`: Threshold date (task hidden until this date).
 - `rec:+1w`: Recurrence pattern (strict mode with `+`).
 - `wf:1`: Waiting-for flag. Entire line highlighted with `TodoWaitingFor` (linked to `DiagnosticWarn`). Defined in `syntax/todo.vim`. Task keeps its position (not folded/hidden).
@@ -73,6 +73,7 @@ Defined in `syntax/todo.vim`. Key highlight groups:
 | `TodoPriorityB` | `Statement` | Priority (B) tasks |
 | `TodoPriorityC` | `Identifier` | Priority (C) tasks |
 | `TodoHidden` | `Comment` | Hidden/threshold tasks (via extmarks in `ftplugin/todo.lua`) |
+| `TodoOverdue` | `#592222` bg / `#ff6666` fg | Overdue `due:` dates on active tasks (via extmarks in `ftplugin/todo.lua`) |
 
 `TodoWaitingFor` is defined after priority rules in `syntax/todo.vim` so it overrides priority colours for `wf:1` lines.
 

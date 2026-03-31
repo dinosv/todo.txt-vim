@@ -49,12 +49,15 @@ vim.keymap.set("v", "<localleader>x", function()
   end
 end, { buffer = true, desc = "Mark selected todos as done" })
 
--- Define highlight group
-vim.api.nvim_set_hl(0, "TodoHidden", { link = "Comment", default = true })
-vim.api.nvim_set_hl(0, "TodoRecurring", { link = "Special", default = true })
+-- Define highlight groups
+vim.api.nvim_set_hl(0, "TodoHidden", { link = "Comment" })
+vim.api.nvim_set_hl(0, "TodoRecurring", { link = "Special" })
+vim.api.nvim_set_hl(0, "TodoOverdue", { bg = "#592222", fg = "#ff6666", bold = true })
 
 -- Namespace for our highlights
 local ns = vim.api.nvim_create_namespace("todotxt")
+
+local dates = require("todotxt.dates")
 
 local function update_highlights()
   if not todotxt.config.threshold_highlight then
@@ -63,18 +66,39 @@ local function update_highlights()
 
   vim.api.nvim_buf_clear_namespace(0, ns, 0, -1)
 
+  local today = dates.today()
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   for i, line in ipairs(lines) do
     if threshold.is_hidden(line) then
       vim.api.nvim_buf_add_highlight(0, ns, "TodoHidden", i - 1, 0, -1)
+    elseif not line:match("^[xX]%s") then
+      -- Check for overdue due date
+      local col_start, col_end = line:find("due:%d%d%d%d%-%d%d%-%d%d")
+      if col_start then
+        local due_date = line:match("due:(%d%d%d%d%-%d%d%-%d%d)")
+        if due_date and due_date < today then
+          vim.api.nvim_buf_set_extmark(0, ns, i - 1, col_start - 1, {
+            end_col = col_end,
+            hl_group = "TodoOverdue",
+            priority = 200,
+          })
+        end
+      end
     end
   end
 end
 
--- Update on buffer changes
+-- Update on buffer changes and colourscheme reload
 vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "TextChangedI" }, {
   buffer = 0,
   callback = update_highlights,
+})
+vim.api.nvim_create_autocmd("ColorScheme", {
+  callback = function()
+    vim.api.nvim_set_hl(0, "TodoHidden", { link = "Comment" })
+    vim.api.nvim_set_hl(0, "TodoRecurring", { link = "Special" })
+    vim.api.nvim_set_hl(0, "TodoOverdue", { bg = "#592222", fg = "#ff6666", bold = true })
+  end,
 })
 
 -- Initial highlight
