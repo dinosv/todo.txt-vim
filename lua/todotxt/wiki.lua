@@ -4,6 +4,40 @@ local function config()
   return require("todotxt").config
 end
 
+local function add_to_index(tag)
+  local cfg = config()
+  local index_path = cfg.wiki_projects_dir:gsub("projects/$", "") .. "index" .. cfg.wiki_ext
+  if vim.fn.filereadable(index_path) ~= 1 then return end
+
+  local lines = vim.fn.readfile(index_path)
+  local link_entry = "- [" .. tag .. "](projects/" .. tag .. ")"
+
+  -- Check if already listed
+  for _, l in ipairs(lines) do
+    if l:find(tag, 1, true) and l:find("projects/" .. tag, 1, true) then
+      return
+    end
+  end
+
+  -- Find end of ## Projects section (next --- after it)
+  local in_projects = false
+  local insert_at = nil
+  for i, l in ipairs(lines) do
+    if l:match("^## Projects") then
+      in_projects = true
+    elseif in_projects and l:match("^%-%-%-") then
+      insert_at = i
+      break
+    end
+  end
+
+  if insert_at then
+    table.insert(lines, insert_at, link_entry)
+    vim.fn.writefile(lines, index_path)
+    vim.notify("Added +" .. tag .. " to wiki index", vim.log.levels.INFO)
+  end
+end
+
 function M.extract_tag(line)
   return line:match("%+(%S+)")
 end
@@ -57,6 +91,7 @@ function M.create_project()
       "## Referencias",
     }
     vim.fn.writefile(template, path)
+    add_to_index(tag)
   end
 
   vim.cmd("tabedit " .. vim.fn.fnameescape(path))
@@ -158,6 +193,7 @@ function M.list_projects()
         "## Referencias",
       }
       vim.fn.writefile(template, path)
+      add_to_index(tag)
     end
     vim.cmd("tabedit " .. vim.fn.fnameescape(path))
   end, { buffer = buf })
