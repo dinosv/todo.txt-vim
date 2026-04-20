@@ -6,6 +6,7 @@ end
 
 local todotxt = require("todotxt")
 local threshold = require("todotxt.threshold")
+local dependency = require("todotxt.dependency")
 
 -- Mark done mapping
 vim.keymap.set("n", "<localleader>x", function()
@@ -111,6 +112,28 @@ local function update_highlights()
   end
 end
 
+local updating_pending = false
+
+local function update_pending()
+  if updating_pending then return end
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local active_ids = dependency.collect_active_ids(lines)
+  local new_lines = {}
+  local changed = false
+  for _, line in ipairs(lines) do
+    local new_line = dependency.transform_line(line, active_ids)
+    if new_line ~= line then
+      changed = true
+    end
+    table.insert(new_lines, new_line)
+  end
+  if changed then
+    updating_pending = true
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, new_lines)
+    updating_pending = false
+  end
+end
+
 local global_group = vim.api.nvim_create_augroup("TodotxtGlobal", { clear = true })
 vim.api.nvim_create_autocmd("ColorScheme", {
   group = global_group,
@@ -129,7 +152,14 @@ vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "TextChangedI" }, {
   callback = update_highlights,
 })
 
+vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged" }, {
+  group = buf_group,
+  buffer = bufnr,
+  callback = update_pending,
+})
+
 update_highlights()
+update_pending()
 
 vim.opt_local.foldmethod = "expr"
 vim.opt_local.foldexpr = "v:lua.require('todotxt').fold_expr(v:lnum)"
