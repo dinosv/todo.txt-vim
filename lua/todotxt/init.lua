@@ -20,6 +20,11 @@ end
 
 local threshold = require("todotxt.threshold")
 
+function M.fold_text()
+  local count = vim.v.foldend - vim.v.foldstart + 1
+  return "+" .. vim.v.folddashes .. " " .. count .. " Completed tasks "
+end
+
 function M.fold_expr(lnum)
   if not M.config.threshold_fold then
     -- Fall back to original fold (completed tasks)

@@ -14,10 +14,8 @@ vim.keymap.set("n", "<localleader>x", function()
 
   local done, new_task = todotxt.mark_done(line)
 
-  -- Replace current line with done task
   vim.api.nvim_buf_set_lines(0, lnum - 1, lnum, false, { done })
 
-  -- Insert new recurring task below if exists
   if new_task then
     vim.api.nvim_buf_set_lines(0, lnum, lnum, false, { new_task })
   end
@@ -40,14 +38,37 @@ vim.keymap.set("v", "<localleader>x", function()
     end
   end
 
-  -- Replace selected lines with done tasks
   vim.api.nvim_buf_set_lines(0, start_line - 1, end_line, false, result)
 
-  -- Insert new recurring tasks after the last done task
   if #new_tasks > 0 then
     vim.api.nvim_buf_set_lines(0, end_line, end_line, false, new_tasks)
   end
 end, { buffer = true, desc = "Mark selected todos as done" })
+
+-- Mark all active todos as done (with recurrence)
+vim.keymap.set("n", "<localleader>X", function()
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local result = {}
+  local new_tasks = {}
+
+  for _, line in ipairs(lines) do
+    if line:match("^[xX]%s") or line == "" then
+      table.insert(result, line)
+    else
+      local done, new_task = todotxt.mark_done(line)
+      table.insert(result, done)
+      if new_task then
+        table.insert(new_tasks, new_task)
+      end
+    end
+  end
+
+  for _, t in ipairs(new_tasks) do
+    table.insert(result, t)
+  end
+
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, result)
+end, { buffer = true, desc = "Mark all todos as done" })
 
 -- Define highlight groups
 vim.api.nvim_set_hl(0, "TodoHidden", { link = "Comment" })
@@ -70,9 +91,11 @@ local function update_highlights()
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   for i, line in ipairs(lines) do
     if threshold.is_hidden(line) then
-      vim.api.nvim_buf_add_highlight(0, ns, "TodoHidden", i - 1, 0, -1)
+      vim.api.nvim_buf_set_extmark(0, ns, i - 1, 0, {
+        end_col = #line,
+        hl_group = "TodoHidden",
+      })
     elseif not line:match("^[xX]%s") then
-      -- Check for overdue due date
       local col_start, col_end = line:find("due:%d%d%d%d%-%d%d%-%d%d")
       if col_start then
         local due_date = line:match("due:(%d%d%d%d%-%d%d%-%d%d)")
@@ -88,12 +111,9 @@ local function update_highlights()
   end
 end
 
--- Update on buffer changes and colourscheme reload
-vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "TextChangedI" }, {
-  buffer = 0,
-  callback = update_highlights,
-})
+local global_group = vim.api.nvim_create_augroup("TodotxtGlobal", { clear = true })
 vim.api.nvim_create_autocmd("ColorScheme", {
+  group = global_group,
   callback = function()
     vim.api.nvim_set_hl(0, "TodoHidden", { link = "Comment" })
     vim.api.nvim_set_hl(0, "TodoRecurring", { link = "Special" })
@@ -101,12 +121,19 @@ vim.api.nvim_create_autocmd("ColorScheme", {
   end,
 })
 
--- Initial highlight
+local bufnr = vim.api.nvim_get_current_buf()
+local buf_group = vim.api.nvim_create_augroup("TodotxtBuf_" .. bufnr, { clear = true })
+vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "TextChangedI" }, {
+  group = buf_group,
+  buffer = bufnr,
+  callback = update_highlights,
+})
+
 update_highlights()
 
--- Set fold options
 vim.opt_local.foldmethod = "expr"
 vim.opt_local.foldexpr = "v:lua.require('todotxt').fold_expr(v:lnum)"
+vim.opt_local.foldtext = "v:lua.require('todotxt').fold_text()"
 
 -- Sort and move hidden to bottom
 local function sort_with_hidden(sort_cmd)

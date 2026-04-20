@@ -2,31 +2,40 @@ local M = {}
 local dates = require("todotxt.dates")
 
 function M.parse_task(line)
+  local padded = " " .. line
   local tags = {}
 
-  tags.rec = line:match("%srec:([^%s]+)") or line:match("^rec:([^%s]+)")
-  tags.due = line:match("%sdue:(%d%d%d%d%-%d%d%-%d%d)")
-  tags.t = line:match("%st:(%d%d%d%d%-%d%d%-%d%d)")
+  tags.rec = padded:match("%srec:([^%s]+)")
+  tags.due = padded:match("%sdue:(%d%d%d%d%-%d%d%-%d%d)")
+  tags.t = padded:match("%st:(%d%d%d%d%-%d%d%-%d%d)")
 
   return tags
 end
 
 function M.strip_completion(line)
-  -- Match: x YYYY-MM-DD optionally followed by (priority)
   local result = line:gsub("^x%s+%d%d%d%d%-%d%d%-%d%d%s+", "")
   return result
 end
 
 function M.set_tag(line, tag, value)
+  local padded = " " .. line
   local pattern = "(%s)" .. tag .. ":[^%s]+"
   local replacement = "%1" .. tag .. ":" .. value
 
-  local result, count = line:gsub(pattern, replacement)
+  local result, count = padded:gsub(pattern, replacement)
   if count == 0 then
-    result = line .. " " .. tag .. ":" .. value
+    return line .. " " .. tag .. ":" .. value
   end
 
-  return result
+  return result:sub(2)
+end
+
+local function update_creation_date(line, today)
+  local with_priority, n = line:gsub("^(%(%a%)%s+)%d%d%d%d%-%d%d%-%d%d", "%1" .. today)
+  if n > 0 then
+    return with_priority
+  end
+  return (line:gsub("^%d%d%d%d%-%d%d%-%d%d", today))
 end
 
 function M.advance_task(line)
@@ -47,9 +56,9 @@ function M.advance_task(line)
   if not new_due then return nil end
 
   local new_task = M.strip_completion(line)
+  new_task = update_creation_date(new_task, dates.today())
   new_task = M.set_tag(new_task, "due", new_due)
 
-  -- Preserve threshold-due gap
   if tags.t and tags.due then
     local gap = dates.diff_days(tags.t, tags.due)
     local new_t = dates.add_days(new_due, -gap)
