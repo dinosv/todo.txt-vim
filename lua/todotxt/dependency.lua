@@ -1,5 +1,7 @@
 local M = {}
 
+local recurrence = require("todotxt.recurrence")
+
 function M.parse_id(line)
   local padded = " " .. line
   return padded:match("%sid:(%S+)")
@@ -39,6 +41,14 @@ function M.is_blocked(line, active_ids)
     if active_ids[id] then return true end
   end
   return false
+end
+
+function M.apply_blocked(line)
+  local new_line = recurrence.set_tag(line, "wf", "1")
+  if not new_line:match("^%(%a%)") then
+    new_line = "(D) " .. new_line
+  end
+  return new_line
 end
 
 return M
