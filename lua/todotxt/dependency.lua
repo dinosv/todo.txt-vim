@@ -59,4 +59,15 @@ function M.apply_unblocked(line)
   return line
 end
 
+function M.transform_line(line, active_ids)
+  if not M.is_active(line) then return line end
+  local pending = M.parse_pending(line)
+  if #pending == 0 then return line end
+  if M.is_blocked(line, active_ids) then
+    return M.apply_blocked(line)
+  else
+    return M.apply_unblocked(line)
+  end
+end
+
 return M

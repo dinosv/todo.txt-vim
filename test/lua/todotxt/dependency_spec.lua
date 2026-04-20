@@ -169,4 +169,31 @@ describe("todotxt.dependency", function()
       assert.equals(once, twice)
     end)
   end)
+
+  describe("transform_line", function()
+    it("blocks a dependent whose blocker is active", function()
+      local active = {["42"] = true}
+      assert.equals("(D) task pending:42 wf:1", dependency.transform_line("task pending:42", active))
+    end)
+
+    it("unblocks a dependent whose blocker is resolved", function()
+      local active = {}
+      assert.equals("(D) task pending:42 wf:0", dependency.transform_line("(D) task pending:42 wf:1", active))
+    end)
+
+    it("does not touch lines without pending", function()
+      local active = {["42"] = true}
+      assert.equals("(A) task wf:1", dependency.transform_line("(A) task wf:1", active))
+    end)
+
+    it("does not touch completed lines", function()
+      local active = {["42"] = true}
+      assert.equals("x 2026-01-01 old pending:42", dependency.transform_line("x 2026-01-01 old pending:42", active))
+    end)
+
+    it("does not touch empty lines", function()
+      local active = {}
+      assert.equals("", dependency.transform_line("", active))
+    end)
+  end)
 end)
