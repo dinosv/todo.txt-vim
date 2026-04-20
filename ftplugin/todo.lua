@@ -129,8 +129,11 @@ local function update_pending()
   end
   if changed then
     updating_pending = true
-    vim.api.nvim_buf_set_lines(0, 0, -1, false, new_lines)
+    local ok, err = pcall(vim.api.nvim_buf_set_lines, 0, 0, -1, false, new_lines)
     updating_pending = false
+    if not ok then
+      vim.notify("todotxt: update_pending failed: " .. tostring(err), vim.log.levels.ERROR)
+    end
   end
 end
 
@@ -152,6 +155,7 @@ vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged", "TextChangedI" }, {
   callback = update_highlights,
 })
 
+-- TextChangedI excluded: rewriting the buffer mid-insert would displace the cursor.
 vim.api.nvim_create_autocmd({ "BufEnter", "TextChanged" }, {
   group = buf_group,
   buffer = bufnr,
