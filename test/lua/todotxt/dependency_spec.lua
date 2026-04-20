@@ -145,4 +145,28 @@ describe("todotxt.dependency", function()
       assert.equals(once, twice)
     end)
   end)
+
+  describe("apply_unblocked", function()
+    it("flips wf:1 to wf:0", function()
+      assert.equals("task pending:42 wf:0", dependency.apply_unblocked("task pending:42 wf:1"))
+    end)
+
+    it("flips wf:1 at line end", function()
+      assert.equals("(D) task wf:0", dependency.apply_unblocked("(D) task wf:1"))
+    end)
+
+    it("leaves a line without wf: untouched", function()
+      assert.equals("task pending:42", dependency.apply_unblocked("task pending:42"))
+    end)
+
+    it("leaves priority untouched", function()
+      assert.equals("(A) task pending:42 wf:0", dependency.apply_unblocked("(A) task pending:42 wf:1"))
+    end)
+
+    it("is idempotent on an already-unblocked line", function()
+      local once = dependency.apply_unblocked("task pending:42 wf:1")
+      local twice = dependency.apply_unblocked(once)
+      assert.equals(once, twice)
+    end)
+  end)
 end)

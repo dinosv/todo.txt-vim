@@ -51,4 +51,12 @@ function M.apply_blocked(line)
   return new_line
 end
 
+function M.apply_unblocked(line)
+  local padded = " " .. line
+  if padded:match("%swf:1%s") or padded:match("%swf:1$") then
+    return recurrence.set_tag(line, "wf", "0")
+  end
+  return line
+end
+
 return M
