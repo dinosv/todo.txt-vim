@@ -27,25 +27,25 @@ describe("todotxt.dependency", function()
     end)
   end)
 
-  describe("parse_pending", function()
+  describe("parse_pid", function()
     it("extracts single id", function()
-      assert.are.same({"42"}, dependency.parse_pending("task pending:42"))
+      assert.are.same({"42"}, dependency.parse_pid("task pid:42"))
     end)
 
     it("extracts comma-separated ids", function()
-      assert.are.same({"42", "43", "7"}, dependency.parse_pending("task pending:42,43,7"))
+      assert.are.same({"42", "43", "7"}, dependency.parse_pid("task pid:42,43,7"))
     end)
 
     it("returns empty list when tag absent", function()
-      assert.are.same({}, dependency.parse_pending("task without pending"))
+      assert.are.same({}, dependency.parse_pid("task without pending"))
     end)
 
     it("returns empty list for empty pending value", function()
-      assert.are.same({}, dependency.parse_pending("task pending:"))
+      assert.are.same({}, dependency.parse_pid("task pid:"))
     end)
 
     it("matches only the first pending tag", function()
-      assert.are.same({"42"}, dependency.parse_pending("task pending:42 pending:43"))
+      assert.are.same({"42"}, dependency.parse_pid("task pid:42 pid:43"))
     end)
   end)
 
@@ -102,17 +102,17 @@ describe("todotxt.dependency", function()
   describe("is_blocked", function()
     it("returns true when a pending id is active", function()
       local active = {["42"] = true}
-      assert.is_true(dependency.is_blocked("task pending:42", active))
+      assert.is_true(dependency.is_blocked("task pid:42", active))
     end)
 
     it("returns false when all pending ids are resolved", function()
       local active = {}
-      assert.is_false(dependency.is_blocked("task pending:42", active))
+      assert.is_false(dependency.is_blocked("task pid:42", active))
     end)
 
     it("returns true when at least one of several pending ids is active", function()
       local active = {["43"] = true}
-      assert.is_true(dependency.is_blocked("task pending:42,43", active))
+      assert.is_true(dependency.is_blocked("task pid:42,43", active))
     end)
 
     it("returns false when no pending tag present", function()
@@ -122,25 +122,25 @@ describe("todotxt.dependency", function()
 
     it("fails open on missing id (not in active_ids)", function()
       local active = {}
-      assert.is_false(dependency.is_blocked("task pending:99", active))
+      assert.is_false(dependency.is_blocked("task pid:99", active))
     end)
   end)
 
   describe("apply_blocked", function()
     it("adds wf:1 and (D) to a bare line", function()
-      assert.equals("(D) task pending:42 wf:1", dependency.apply_blocked("task pending:42"))
+      assert.equals("(D) task pid:42 wf:1", dependency.apply_blocked("task pid:42"))
     end)
 
     it("flips wf:0 to wf:1 without duplicating", function()
-      assert.equals("(D) task pending:42 wf:1 more", dependency.apply_blocked("task pending:42 wf:0 more"))
+      assert.equals("(D) task pid:42 wf:1 more", dependency.apply_blocked("task pid:42 wf:0 more"))
     end)
 
     it("keeps existing priority instead of prepending (D)", function()
-      assert.equals("(A) task pending:42 wf:1", dependency.apply_blocked("(A) task pending:42"))
+      assert.equals("(A) task pid:42 wf:1", dependency.apply_blocked("(A) task pid:42"))
     end)
 
     it("is idempotent on an already-blocked line", function()
-      local once = dependency.apply_blocked("task pending:42")
+      local once = dependency.apply_blocked("task pid:42")
       local twice = dependency.apply_blocked(once)
       assert.equals(once, twice)
     end)
@@ -148,7 +148,7 @@ describe("todotxt.dependency", function()
 
   describe("apply_unblocked", function()
     it("flips wf:1 to wf:0", function()
-      assert.equals("task pending:42 wf:0", dependency.apply_unblocked("task pending:42 wf:1"))
+      assert.equals("task pid:42 wf:0", dependency.apply_unblocked("task pid:42 wf:1"))
     end)
 
     it("flips wf:1 at line end", function()
@@ -156,15 +156,15 @@ describe("todotxt.dependency", function()
     end)
 
     it("leaves a line without wf: untouched", function()
-      assert.equals("task pending:42", dependency.apply_unblocked("task pending:42"))
+      assert.equals("task pid:42", dependency.apply_unblocked("task pid:42"))
     end)
 
     it("leaves priority untouched", function()
-      assert.equals("(A) task pending:42 wf:0", dependency.apply_unblocked("(A) task pending:42 wf:1"))
+      assert.equals("(A) task pid:42 wf:0", dependency.apply_unblocked("(A) task pid:42 wf:1"))
     end)
 
     it("is idempotent on an already-unblocked line", function()
-      local once = dependency.apply_unblocked("task pending:42 wf:1")
+      local once = dependency.apply_unblocked("task pid:42 wf:1")
       local twice = dependency.apply_unblocked(once)
       assert.equals(once, twice)
     end)
@@ -173,12 +173,12 @@ describe("todotxt.dependency", function()
   describe("transform_line", function()
     it("blocks a dependent whose blocker is active", function()
       local active = {["42"] = true}
-      assert.equals("(D) task pending:42 wf:1", dependency.transform_line("task pending:42", active))
+      assert.equals("(D) task pid:42 wf:1", dependency.transform_line("task pid:42", active))
     end)
 
     it("unblocks a dependent whose blocker is resolved", function()
       local active = {}
-      assert.equals("(D) task pending:42 wf:0", dependency.transform_line("(D) task pending:42 wf:1", active))
+      assert.equals("(D) task pid:42 wf:0", dependency.transform_line("(D) task pid:42 wf:1", active))
     end)
 
     it("does not touch lines without pending", function()
@@ -188,7 +188,7 @@ describe("todotxt.dependency", function()
 
     it("does not touch completed lines", function()
       local active = {["42"] = true}
-      assert.equals("x 2026-01-01 old pending:42", dependency.transform_line("x 2026-01-01 old pending:42", active))
+      assert.equals("x 2026-01-01 old pid:42", dependency.transform_line("x 2026-01-01 old pid:42", active))
     end)
 
     it("does not touch empty lines", function()

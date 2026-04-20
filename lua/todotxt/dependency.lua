@@ -7,9 +7,9 @@ function M.parse_id(line)
   return padded:match("%sid:(%S+)")
 end
 
-function M.parse_pending(line)
+function M.parse_pid(line)
   local padded = " " .. line
-  local value = padded:match("%spending:(%S+)")
+  local value = padded:match("%spid:(%S+)")
   if not value then return {} end
   local ids = {}
   for id in value:gmatch("([^,]+)") do
@@ -36,8 +36,8 @@ function M.collect_active_ids(lines)
 end
 
 function M.is_blocked(line, active_ids)
-  local pending = M.parse_pending(line)
-  for _, id in ipairs(pending) do
+  local pids = M.parse_pid(line)
+  for _, id in ipairs(pids) do
     if active_ids[id] then return true end
   end
   return false
@@ -61,8 +61,8 @@ end
 
 function M.transform_line(line, active_ids)
   if not M.is_active(line) then return line end
-  local pending = M.parse_pending(line)
-  if #pending == 0 then return line end
+  local pids = M.parse_pid(line)
+  if #pids == 0 then return line end
   if M.is_blocked(line, active_ids) then
     return M.apply_blocked(line)
   else

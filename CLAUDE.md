@@ -51,7 +51,7 @@ todo.txt-vim/
 ## Task format
 
 ```
-(A) 2026-02-17 +project_tag task description @context due:2026-03-01 t:2026-02-20 rec:+1w wf:1 h:1 id:42 pending:43
+(A) 2026-02-17 +project_tag task description @context due:2026-03-01 t:2026-02-20 rec:+1w wf:1 h:1 id:42 pid:43
 ```
 
 - `+project_tag`: Project identifier. MUST match wiki filename (see below).
@@ -62,7 +62,7 @@ todo.txt-vim/
 - `wf:1`: Waiting-for flag. Entire line highlighted with `TodoWaitingFor` (linked to `DiagnosticWarn`). Defined in `syntax/todo.vim`. Task keeps its position (not folded/hidden).
 - `h:1`: Hidden flag. Entire line highlighted with `TodoHidden` (linked to `Comment`). Defined in `ftplugin/todo.lua` via extmarks. Task is folded and sorted to bottom.
 - `id:N`: Task identifier used as a dependency anchor. User-assigned; the plugin never generates or renames IDs.
-- `pending:N,M,...`: Task blocked until every listed `id:` refers to a line that is either completed (`x ...`) or absent. While any blocker stays active, the plugin stamps `wf:1` (ensuring the `TodoWaitingFor` highlight) and prepends `(D)` if no priority is set. When all blockers resolve, the `wf:1` flips to `wf:0`; priority is not touched — a `(D)` that the plugin added stays on the line until you promote it manually. Logic in `lua/todotxt/dependency.lua`, autocmd in `ftplugin/todo.lua`.
+- `pid:N,M,...`: Task blocked until every listed `id:` refers to a line that is either completed (`x ...`) or absent. While any blocker stays active, the plugin stamps `wf:1` (ensuring the `TodoWaitingFor` highlight) and prepends `(D)` if no priority is set. When all blockers resolve, the `wf:1` flips to `wf:0`; priority is not touched — a `(D)` that the plugin added stays on the line until you promote it manually. Logic in `lua/todotxt/dependency.lua`, autocmd in `ftplugin/todo.lua`.
 
 ## Syntax highlighting
 
