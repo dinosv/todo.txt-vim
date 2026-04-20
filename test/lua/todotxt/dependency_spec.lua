@@ -26,4 +26,26 @@ describe("todotxt.dependency", function()
       assert.equals("abc", dependency.parse_id("task id:abc"))
     end)
   end)
+
+  describe("parse_pending", function()
+    it("extracts single id", function()
+      assert.are.same({"42"}, dependency.parse_pending("task pending:42"))
+    end)
+
+    it("extracts comma-separated ids", function()
+      assert.are.same({"42", "43", "7"}, dependency.parse_pending("task pending:42,43,7"))
+    end)
+
+    it("returns empty list when tag absent", function()
+      assert.are.same({}, dependency.parse_pending("task without pending"))
+    end)
+
+    it("returns empty list for empty pending value", function()
+      assert.are.same({}, dependency.parse_pending("task pending:"))
+    end)
+
+    it("matches only the first pending tag", function()
+      assert.are.same({"42"}, dependency.parse_pending("task pending:42 pending:43"))
+    end)
+  end)
 end)
