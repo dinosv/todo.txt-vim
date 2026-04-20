@@ -18,6 +18,7 @@ todo.txt-vim/
 │   ├── init.lua          # Config and setup()
 │   ├── recurrence.lua    # Recurring task logic (rec: tag)
 │   ├── threshold.lua     # Hidden/threshold task logic (t: and h:1 tags)
+│   ├── dependency.lua    # Task dependencies (id: and pending: tags)
 │   └── dates.lua         # Date arithmetic (add_days, add_weeks, add_months, parse_pattern)
 ├── syntax/todo.vim       # Syntax highlighting (priorities, contexts, projects, dates)
 ├── ftdetect/todo.vim     # Filetype detection (todo.txt, done.txt)
@@ -50,7 +51,7 @@ todo.txt-vim/
 ## Task format
 
 ```
-(A) 2026-02-17 +project_tag task description @context due:2026-03-01 t:2026-02-20 rec:+1w wf:1 h:1
+(A) 2026-02-17 +project_tag task description @context due:2026-03-01 t:2026-02-20 rec:+1w wf:1 h:1 id:42 pending:43
 ```
 
 - `+project_tag`: Project identifier. MUST match wiki filename (see below).
@@ -60,6 +61,8 @@ todo.txt-vim/
 - `rec:+1w`: Recurrence pattern (strict mode with `+`).
 - `wf:1`: Waiting-for flag. Entire line highlighted with `TodoWaitingFor` (linked to `DiagnosticWarn`). Defined in `syntax/todo.vim`. Task keeps its position (not folded/hidden).
 - `h:1`: Hidden flag. Entire line highlighted with `TodoHidden` (linked to `Comment`). Defined in `ftplugin/todo.lua` via extmarks. Task is folded and sorted to bottom.
+- `id:N`: Task identifier used as a dependency anchor. User-assigned; the plugin never generates or renames IDs.
+- `pending:N,M,...`: Task blocked until every listed `id:` refers to a line that is either completed (`x ...`) or absent. While any blocker stays active, the plugin stamps `wf:1` (ensuring the `TodoWaitingFor` highlight) and prepends `(D)` if no priority is set. When all blockers resolve, the `wf:1` flips to `wf:0`; priority is not touched. Logic in `lua/todotxt/dependency.lua`, autocmd in `ftplugin/todo.lua`.
 
 ## Syntax highlighting
 
