@@ -71,4 +71,65 @@ describe("todotxt", function()
       assert.is_false(todotxt.config.auto_recur)
     end)
   end)
+
+  describe("category", function()
+    local dates = require("todotxt.dates")
+
+    before_each(function()
+      dates._original_today = dates.today
+      dates.today = function() return "2026-04-20" end
+    end)
+
+    after_each(function()
+      dates.today = dates._original_today
+    end)
+
+    it("returns nil key and level 0 for active task with no context", function()
+      local key, level = todotxt.category("(A) 2026-04-20 plain task")
+      assert.is_nil(key)
+      assert.equals(0, level)
+    end)
+
+    it("returns @context key and level 1 for active task with one context", function()
+      local key, level = todotxt.category("(A) 2026-04-20 task @UDD")
+      assert.equals("@UDD", key)
+      assert.equals(1, level)
+    end)
+
+    it("returns first @context when several are present", function()
+      local key, level = todotxt.category("task @casa @work")
+      assert.equals("@casa", key)
+      assert.equals(1, level)
+    end)
+
+    it("returns completed key and level 2 for x-prefixed line", function()
+      local key, level = todotxt.category("x 2026-04-19 done task @UDD")
+      assert.equals("completed", key)
+      assert.equals(2, level)
+    end)
+
+    it("returns hidden key and level 2 for h:1", function()
+      local key, level = todotxt.category("(A) 2026-04-20 task @UDD h:1")
+      assert.equals("hidden", key)
+      assert.equals(2, level)
+    end)
+
+    it("returns hidden key and level 2 for future threshold", function()
+      local key, level = todotxt.category("(A) 2026-04-20 task t:2026-05-01")
+      assert.equals("hidden", key)
+      assert.equals(2, level)
+    end)
+
+    it("treats t: in the past as not hidden", function()
+      local key, level = todotxt.category("(A) 2026-04-20 task @UDD t:2026-04-01")
+      assert.equals("@UDD", key)
+      assert.equals(1, level)
+    end)
+
+    it("returns nil key and level 0 for empty line", function()
+      local key, level = todotxt.category("")
+      assert.is_nil(key)
+      assert.equals(0, level)
+    end)
+  end)
 end)

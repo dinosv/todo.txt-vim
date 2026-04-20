@@ -20,6 +20,27 @@ end
 
 local threshold = require("todotxt.threshold")
 
+function M.category(line)
+  if type(line) ~= "string" or line == "" then
+    return nil, 0
+  end
+
+  if line:match("^[xX]%s") then
+    return "completed", 2
+  end
+
+  if threshold.is_hidden(line) then
+    return "hidden", 2
+  end
+
+  local ctx = line:match("%s@(%S+)") or line:match("^@(%S+)")
+  if ctx then
+    return "@" .. ctx, 1
+  end
+
+  return nil, 0
+end
+
 function M.fold_text()
   local count = vim.v.foldend - vim.v.foldstart + 1
   return "+" .. vim.v.folddashes .. " " .. count .. " Completed tasks "
