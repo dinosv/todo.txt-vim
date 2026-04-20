@@ -33,4 +33,12 @@ function M.collect_active_ids(lines)
   return set
 end
 
+function M.is_blocked(line, active_ids)
+  local pending = M.parse_pending(line)
+  for _, id in ipairs(pending) do
+    if active_ids[id] then return true end
+  end
+  return false
+end
+
 return M

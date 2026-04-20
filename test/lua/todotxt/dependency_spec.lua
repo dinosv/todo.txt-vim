@@ -98,4 +98,31 @@ describe("todotxt.dependency", function()
       assert.are.same({}, ids)
     end)
   end)
+
+  describe("is_blocked", function()
+    it("returns true when a pending id is active", function()
+      local active = {["42"] = true}
+      assert.is_true(dependency.is_blocked("task pending:42", active))
+    end)
+
+    it("returns false when all pending ids are resolved", function()
+      local active = {}
+      assert.is_false(dependency.is_blocked("task pending:42", active))
+    end)
+
+    it("returns true when at least one of several pending ids is active", function()
+      local active = {["43"] = true}
+      assert.is_true(dependency.is_blocked("task pending:42,43", active))
+    end)
+
+    it("returns false when no pending tag present", function()
+      local active = {["42"] = true}
+      assert.is_false(dependency.is_blocked("task without pending", active))
+    end)
+
+    it("fails open on missing id (not in active_ids)", function()
+      local active = {}
+      assert.is_false(dependency.is_blocked("task pending:99", active))
+    end)
+  end)
 end)
