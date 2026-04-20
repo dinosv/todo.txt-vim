@@ -22,4 +22,15 @@ function M.is_active(line)
   return true
 end
 
+function M.collect_active_ids(lines)
+  local set = {}
+  for _, line in ipairs(lines) do
+    if M.is_active(line) then
+      local id = M.parse_id(line)
+      if id then set[id] = true end
+    end
+  end
+  return set
+end
+
 return M

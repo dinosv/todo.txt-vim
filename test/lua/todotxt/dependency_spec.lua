@@ -70,4 +70,32 @@ describe("todotxt.dependency", function()
       assert.is_true(dependency.is_active("fix the xray machine"))
     end)
   end)
+
+  describe("collect_active_ids", function()
+    it("collects ids from active lines", function()
+      local lines = {"(A) task id:1", "(B) task id:2", "task without id"}
+      local ids = dependency.collect_active_ids(lines)
+      assert.is_true(ids["1"])
+      assert.is_true(ids["2"])
+    end)
+
+    it("ignores ids on completed lines", function()
+      local lines = {"x 2026-01-01 done id:1", "(A) active id:2"}
+      local ids = dependency.collect_active_ids(lines)
+      assert.is_nil(ids["1"])
+      assert.is_true(ids["2"])
+    end)
+
+    it("ignores empty lines", function()
+      local lines = {"", "(A) active id:1"}
+      local ids = dependency.collect_active_ids(lines)
+      assert.is_true(ids["1"])
+    end)
+
+    it("returns empty table when no ids present", function()
+      local lines = {"(A) task one", "(B) task two"}
+      local ids = dependency.collect_active_ids(lines)
+      assert.are.same({}, ids)
+    end)
+  end)
 end)
