@@ -16,4 +16,10 @@ function M.parse_pending(line)
   return ids
 end
 
+function M.is_active(line)
+  if line == nil or line == "" then return false end
+  if line:match("^[xX]%s") then return false end
+  return true
+end
+
 return M

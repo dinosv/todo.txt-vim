@@ -48,4 +48,26 @@ describe("todotxt.dependency", function()
       assert.are.same({"42"}, dependency.parse_pending("task pending:42 pending:43"))
     end)
   end)
+
+  describe("is_active", function()
+    it("returns true for a normal task", function()
+      assert.is_true(dependency.is_active("(A) task"))
+    end)
+
+    it("returns false for a completed task", function()
+      assert.is_false(dependency.is_active("x 2026-01-01 task"))
+    end)
+
+    it("returns false for an uppercase X completed task", function()
+      assert.is_false(dependency.is_active("X 2026-01-01 task"))
+    end)
+
+    it("returns false for an empty line", function()
+      assert.is_false(dependency.is_active(""))
+    end)
+
+    it("returns true for a line that merely contains 'x'", function()
+      assert.is_true(dependency.is_active("fix the xray machine"))
+    end)
+  end)
 end)
