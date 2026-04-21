@@ -80,6 +80,18 @@ Defined in `syntax/todo.vim`. Key highlight groups:
 
 `TodoWaitingFor` is defined after priority rules in `syntax/todo.vim` so it overrides priority colours for `wf:1` lines.
 
+## Folding
+
+`foldmethod=expr`, driven by `M.fold_expr` in `lua/todotxt/init.lua`:
+
+- Level 1: active tasks with an `@context`. Contiguous same-context tasks share one fold. Open on buffer entry; toggle with `za`.
+- Level 2: completed (`x `) and hidden (`h:1`, future `t:`) tasks. Folded on buffer entry.
+- Level 0: active tasks with no `@context`. Never folded.
+
+Buffer-local `foldlevel = 1` is set in `ftplugin/todo.lua` so level-1 opens on entry while level-2 stays closed. `foldlevelstart` is global and deliberately not touched.
+
+The `-s@` sort groups same-context tasks into contiguous blocks, which is the workflow this folding is designed around. Fold headers are category-aware: `+-- @UDD  N tasks`, `+-- N completed tasks`, `+-- N hidden tasks`.
+
 ---
 
 ## Modification: Project wiki navigation
