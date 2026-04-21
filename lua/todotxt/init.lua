@@ -47,28 +47,32 @@ function M.fold_text()
 end
 
 function M.fold_expr(lnum)
+  local line = vim.fn.getline(lnum)
+
   if not M.config.threshold_fold then
-    -- Fall back to original fold (completed tasks)
-    local line = vim.fn.getline(lnum)
+    -- Legacy fallback: only completed tasks fold, at level 1.
     if line:match("^[xX]%s") then
       return 1
     end
     return 0
   end
 
-  local line = vim.fn.getline(lnum)
+  local key, level = M.category(line)
 
-  -- Completed tasks
-  if line:match("^[xX]%s") then
-    return 1
+  if level == 0 then
+    return 0
   end
 
-  -- Hidden tasks
-  if threshold.is_hidden(line) then
-    return 1
+  if lnum == 1 then
+    return ">" .. level
   end
 
-  return 0
+  local prev_key, _ = M.category(vim.fn.getline(lnum - 1))
+  if key ~= prev_key then
+    return ">" .. level
+  end
+
+  return level
 end
 
 function M.mark_done(line)

@@ -132,4 +132,96 @@ describe("todotxt", function()
       assert.equals(0, level)
     end)
   end)
+
+  describe("fold_expr", function()
+    local dates = require("todotxt.dates")
+    local bufnr
+
+    local function set_buffer(lines)
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    end
+
+    before_each(function()
+      dates._original_today = dates.today
+      dates.today = function() return "2026-04-20" end
+      bufnr = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_set_current_buf(bufnr)
+      todotxt.setup({})
+    end)
+
+    after_each(function()
+      dates.today = dates._original_today
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end)
+
+    it("returns 0 for a line with no category", function()
+      set_buffer({ "(A) 2026-04-20 plain task" })
+      assert.equals(0, todotxt.fold_expr(1))
+    end)
+
+    it("starts a level-1 fold on the first @context line", function()
+      set_buffer({ "(A) task @UDD" })
+      assert.equals(">1", todotxt.fold_expr(1))
+    end)
+
+    it("stays at level 1 for contiguous same-@context lines", function()
+      set_buffer({
+        "(A) task one @UDD",
+        "(B) task two @UDD",
+      })
+      assert.equals(">1", todotxt.fold_expr(1))
+      assert.equals(1,    todotxt.fold_expr(2))
+    end)
+
+    it("starts a new level-1 fold when @context changes", function()
+      set_buffer({
+        "(A) task one @UDD",
+        "(B) task two @casa",
+      })
+      assert.equals(">1", todotxt.fold_expr(1))
+      assert.equals(">1", todotxt.fold_expr(2))
+    end)
+
+    it("starts a level-2 fold for a completed line", function()
+      set_buffer({ "x 2026-04-19 done task" })
+      assert.equals(">2", todotxt.fold_expr(1))
+    end)
+
+    it("keeps contiguous completed lines in one level-2 fold", function()
+      set_buffer({
+        "x 2026-04-19 done one",
+        "x 2026-04-18 done two",
+      })
+      assert.equals(">2", todotxt.fold_expr(1))
+      assert.equals(2,    todotxt.fold_expr(2))
+    end)
+
+    it("separates completed and hidden into different level-2 folds", function()
+      set_buffer({
+        "x 2026-04-19 done one",
+        "(A) 2026-04-20 task @UDD h:1",
+      })
+      assert.equals(">2", todotxt.fold_expr(1))
+      assert.equals(">2", todotxt.fold_expr(2))
+    end)
+
+    it("drops to level 0 for a no-context line after a context fold", function()
+      set_buffer({
+        "(A) task @UDD",
+        "(B) plain task",
+      })
+      assert.equals(">1", todotxt.fold_expr(1))
+      assert.equals(0,    todotxt.fold_expr(2))
+    end)
+
+    it("falls back to completed-only folding when threshold_fold is false", function()
+      todotxt.setup({ threshold_fold = false })
+      set_buffer({
+        "(A) task @UDD",
+        "x 2026-04-19 done",
+      })
+      assert.equals(0, todotxt.fold_expr(1))
+      assert.equals(1, todotxt.fold_expr(2))
+    end)
+  end)
 end)
