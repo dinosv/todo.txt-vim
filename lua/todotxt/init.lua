@@ -41,9 +41,25 @@ function M.category(line)
   return nil, 0
 end
 
+function M.fold_header(first_line, count, dashes)
+  dashes = dashes or ""
+  local key, _ = M.category(first_line)
+
+  if key == "completed" then
+    return "+" .. dashes .. " " .. count .. " completed tasks "
+  elseif key == "hidden" then
+    return "+" .. dashes .. " " .. count .. " hidden tasks "
+  elseif key and key:sub(1, 1) == "@" then
+    return "+" .. dashes .. " " .. key .. "  " .. count .. " tasks "
+  end
+
+  return "+" .. dashes .. " " .. count .. " tasks "
+end
+
 function M.fold_text()
+  local first_line = vim.fn.getline(vim.v.foldstart)
   local count = vim.v.foldend - vim.v.foldstart + 1
-  return "+" .. vim.v.folddashes .. " " .. count .. " Completed tasks "
+  return M.fold_header(first_line, count, vim.v.folddashes)
 end
 
 function M.fold_expr(lnum)

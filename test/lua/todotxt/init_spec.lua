@@ -224,4 +224,38 @@ describe("todotxt", function()
       assert.equals(1, todotxt.fold_expr(2))
     end)
   end)
+
+  describe("fold_header", function()
+    local dates = require("todotxt.dates")
+
+    before_each(function()
+      dates._original_today = dates.today
+      dates.today = function() return "2026-04-20" end
+    end)
+
+    after_each(function()
+      dates.today = dates._original_today
+    end)
+
+    it("formats a context fold with the @tag and count", function()
+      local header = todotxt.fold_header("(A) task @UDD", 5, "--")
+      assert.matches("^%+%-%- @UDD  5 tasks ", header)
+    end)
+
+    it("formats a completed fold", function()
+      local header = todotxt.fold_header("x 2026-04-19 done", 3, "-")
+      assert.equals("+- 3 completed tasks ", header)
+    end)
+
+    it("formats a hidden fold", function()
+      local header = todotxt.fold_header("(A) task h:1", 2, "--")
+      assert.equals("+-- 2 hidden tasks ", header)
+    end)
+
+    it("handles missing dashes gracefully", function()
+      local header = todotxt.fold_header("(A) task @casa", 1, nil)
+      assert.matches("@casa", header)
+      assert.matches("1 tasks", header)
+    end)
+  end)
 end)
