@@ -168,6 +168,7 @@ update_pending()
 vim.opt_local.foldmethod = "expr"
 vim.opt_local.foldexpr = "v:lua.require('todotxt').fold_expr(v:lnum)"
 vim.opt_local.foldtext = "v:lua.require('todotxt').fold_text()"
+vim.opt_local.foldlevel = 1
 
 -- Sort and move hidden to bottom
 local function sort_with_hidden(sort_cmd)
