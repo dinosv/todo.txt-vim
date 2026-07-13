@@ -250,4 +250,59 @@ describe("todotxt.wiki integration", function()
       assert.equals(5, #vim.fn.readfile(root .. "/wiki/projects/alpha.md"))
     end)
   end)
+
+  describe("show_tasks", function()
+    local root
+
+    before_each(function()
+      root = vim.fn.tempname()
+      vim.fn.mkdir(root .. "/wiki/projects", "p")
+      todotxt.setup({
+        wiki_projects_dir = root .. "/wiki/projects/",
+        wiki_ext = ".md",
+        todo_file = root .. "/todo.txt",
+      })
+    end)
+
+    after_each(function()
+      vim.fn.delete(root, "rf")
+      vim.cmd("silent! tabonly!")
+    end)
+
+    it("formats tasks with their line numbers", function()
+      local rows = wiki.format_tasks({
+        { lnum = 3, text = "call client +alpha" },
+        { lnum = 12, text = "(A) report +alpha" },
+      })
+      assert.same({ "   3  call client +alpha", "  12  (A) report +alpha" }, rows)
+    end)
+
+    it("opens a float listing the project's active tasks", function()
+      vim.fn.writefile({ "uno +VRS_GSK", "x 2026-07-01 done +VRS_GSK" }, root .. "/todo.txt")
+      vim.fn.writefile({ "# VRS_GSK" }, root .. "/wiki/projects/VRS_GSK.md")
+      vim.cmd("edit " .. vim.fn.fnameescape(root .. "/wiki/projects/VRS_GSK.md"))
+
+      wiki.show_tasks()
+
+      local float_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+      assert.equals(1, #float_lines)
+      assert.matches("uno %+VRS_GSK", float_lines[1])
+      -- close the float
+      vim.api.nvim_win_close(0, true)
+    end)
+
+    it("jumps to the task line in todo.txt on <CR>", function()
+      vim.fn.writefile({ "uno +VRS_GSK", "dos +VRS_GSK" }, root .. "/todo.txt")
+      vim.fn.writefile({ "# VRS_GSK" }, root .. "/wiki/projects/VRS_GSK.md")
+      vim.cmd("edit " .. vim.fn.fnameescape(root .. "/wiki/projects/VRS_GSK.md"))
+
+      wiki.show_tasks()
+      vim.cmd("normal! j")
+      local termcodes = vim.api.nvim_replace_termcodes("<CR>", true, false, true)
+      vim.api.nvim_feedkeys(termcodes, "x", false)
+
+      assert.equals(root .. "/todo.txt", vim.api.nvim_buf_get_name(0))
+      assert.equals(2, vim.api.nvim_win_get_cursor(0)[1])
+    end)
+  end)
 end)

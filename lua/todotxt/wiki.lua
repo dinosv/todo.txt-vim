@@ -290,6 +290,44 @@ local function open_list_float(display, title)
   return buf, win, close
 end
 
+function M.format_tasks(tasks)
+  local rows = {}
+  for _, t in ipairs(tasks) do
+    table.insert(rows, string.format("%4d  %s", t.lnum, t.text))
+  end
+  return rows
+end
+
+-- -wt in a wiki project page: list this project's active tasks.
+function M.show_tasks()
+  local tag = vim.fn.expand("%:t:r")
+  if tag == "" then
+    vim.notify("Not in a project page", vim.log.levels.WARN)
+    return
+  end
+
+  local tasks = M.tasks_for(tag)
+  if not tasks then
+    vim.notify("todo file not found: " .. config().todo_file, vim.log.levels.WARN)
+    return
+  end
+  if #tasks == 0 then
+    vim.notify("No active tasks for +" .. tag, vim.log.levels.INFO)
+    return
+  end
+
+  local buf, _, close = open_list_float(M.format_tasks(tasks), " +" .. tag .. " tasks ")
+  vim.keymap.set("n", "<CR>", function()
+    local lnum = tonumber(vim.api.nvim_get_current_line():match("^%s*(%d+)"))
+    if not lnum then
+      return
+    end
+    close()
+    vim.cmd("tabedit " .. vim.fn.fnameescape(config().todo_file))
+    vim.api.nvim_win_set_cursor(0, { math.min(lnum, vim.api.nvim_buf_line_count(0)), 0 })
+  end, { buffer = buf })
+end
+
 function M.list_projects()
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   local tags = M.collect_tags(lines)
