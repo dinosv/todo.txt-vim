@@ -383,4 +383,40 @@ describe("todotxt.wiki integration", function()
       assert.equals(0, vim.fn.filereadable(root .. "/todo.txt"))
     end)
   end)
+
+  describe("wiki-side mappings", function()
+    local root
+
+    before_each(function()
+      vim.g.maplocalleader = "-"
+      root = vim.fn.tempname()
+      vim.fn.mkdir(root .. "/wiki/projects", "p")
+      vim.fn.writefile({ "# alpha" }, root .. "/wiki/projects/alpha.md")
+      -- setup() re-registers the autocmd against the temp dir
+      todotxt.setup({ wiki_projects_dir = root .. "/wiki/projects/", wiki_ext = ".md" })
+    end)
+
+    after_each(function()
+      vim.fn.delete(root, "rf")
+    end)
+
+    it("attach sets buffer-local -wt and -wa mappings", function()
+      local buf = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_set_current_buf(buf)
+      wiki.attach(buf)
+      assert.equals(1, vim.fn.maparg("-wt", "n", false, true).buffer)
+      assert.equals(1, vim.fn.maparg("-wa", "n", false, true).buffer)
+    end)
+
+    it("entering a project page attaches the mappings via autocmd", function()
+      vim.cmd("edit " .. vim.fn.fnameescape(root .. "/wiki/projects/alpha.md"))
+      assert.equals(1, vim.fn.maparg("-wt", "n", false, true).buffer)
+    end)
+
+    it("does not attach outside the projects dir", function()
+      vim.fn.writefile({ "# other" }, root .. "/other.md")
+      vim.cmd("edit " .. vim.fn.fnameescape(root .. "/other.md"))
+      assert.same({}, vim.fn.maparg("-wt", "n", false, true))
+    end)
+  end)
 end)

@@ -397,4 +397,26 @@ function M.list_projects()
   end, { buffer = buf })
 end
 
+-- Buffer-local mappings for wiki project pages. Idempotent.
+function M.attach(buf)
+  vim.keymap.set("n", "<localleader>wt", M.show_tasks,
+    { buffer = buf, desc = "Show this project's tasks from todo.txt" })
+  vim.keymap.set("n", "<localleader>wa", M.capture_task,
+    { buffer = buf, desc = "Add a task to todo.txt for this project" })
+end
+
+-- Path-scoped autocmd attaching the wiki-side mappings. Called at startup
+-- from plugin/todotxt.lua and again from setup() so a customised
+-- wiki_projects_dir takes effect.
+function M.register_autocmd()
+  local group = vim.api.nvim_create_augroup("TodotxtWiki", { clear = true })
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = group,
+    pattern = projects_dir() .. "*" .. config().wiki_ext,
+    callback = function(ev)
+      M.attach(ev.buf)
+    end,
+  })
+end
+
 return M

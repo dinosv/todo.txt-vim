@@ -17,6 +17,9 @@ M.config = {
 function M.setup(opts)
   opts = opts or {}
   M.config = vim.tbl_deep_extend("force", M.config, opts)
+  pcall(function()
+    require("todotxt.wiki").register_autocmd()
+  end)
 end
 
 local threshold = require("todotxt.threshold")
