@@ -1,5 +1,7 @@
 local M = {}
 
+local dates = require("todotxt.dates")
+
 local function config()
   return require("todotxt").config
 end
@@ -130,6 +132,32 @@ function M.tasks_for(tag)
   return M.active_tasks(lines, tag)
 end
 
+function M.journal_entry(done_line)
+  local date, task = done_line:match("^[xX]%s+(%d%d%d%d%-%d%d%-%d%d)%s+(.*)")
+  if not date then
+    task = done_line:match("^[xX]%s+(.*)")
+    if not task then
+      return nil
+    end
+    date = dates.today()
+  end
+  return "- " .. date .. " x " .. task
+end
+
+function M.insert_journal_entry(page_lines, entry)
+  local out = vim.deepcopy(page_lines)
+  for i, line in ipairs(out) do
+    if line:match("^## Registro") then
+      table.insert(out, i + 1, entry)
+      return out
+    end
+  end
+  table.insert(out, "")
+  table.insert(out, "## Registro")
+  table.insert(out, entry)
+  return out
+end
+
 local function page_template(tag)
   return {
     "# " .. tag,
@@ -141,6 +169,8 @@ local function page_template(tag)
     "Ver: `grep '+" .. tag .. "' " .. config().todo_file .. "`",
     "",
     "## Notas y decisiones",
+    "",
+    "## Registro",
     "",
     "## Referencias",
   }

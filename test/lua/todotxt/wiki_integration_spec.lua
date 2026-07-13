@@ -71,4 +71,78 @@ describe("todotxt.wiki integration", function()
       assert.is_nil(wiki.tasks_for("alpha"))
     end)
   end)
+
+  describe("journal_entry", function()
+    it("reorders a done line into '- date x task'", function()
+      assert.equals(
+        "- 2026-07-13 x enviar informe final +VRS_GSK",
+        wiki.journal_entry("x 2026-07-13 enviar informe final +VRS_GSK")
+      )
+    end)
+
+    it("returns nil for a line that is not completed", function()
+      assert.is_nil(wiki.journal_entry("(A) still active +VRS_GSK"))
+    end)
+
+    it("falls back to today when the done line has no date", function()
+      local dates = require("todotxt.dates")
+      assert.equals(
+        "- " .. dates.today() .. " x undated task +tag",
+        wiki.journal_entry("x undated task +tag")
+      )
+    end)
+  end)
+
+  describe("insert_journal_entry", function()
+    it("inserts directly under an existing Registro heading, newest first", function()
+      local page = {
+        "# VRS_GSK",
+        "",
+        "## Registro",
+        "- 2026-07-10 x reunion kickoff +VRS_GSK",
+      }
+      local out = wiki.insert_journal_entry(page, "- 2026-07-13 x enviar informe +VRS_GSK")
+      assert.same({
+        "# VRS_GSK",
+        "",
+        "## Registro",
+        "- 2026-07-13 x enviar informe +VRS_GSK",
+        "- 2026-07-10 x reunion kickoff +VRS_GSK",
+      }, out)
+      -- input not mutated
+      assert.equals(4, #page)
+    end)
+
+    it("appends the section when the page has no Registro heading", function()
+      local out = wiki.insert_journal_entry({ "# VRS_GSK" }, "- 2026-07-13 x tarea +VRS_GSK")
+      assert.same({
+        "# VRS_GSK",
+        "",
+        "## Registro",
+        "- 2026-07-13 x tarea +VRS_GSK",
+      }, out)
+    end)
+  end)
+
+  describe("page template", function()
+    local root
+
+    before_each(function()
+      root = vim.fn.tempname()
+      vim.fn.mkdir(root .. "/wiki/projects", "p")
+      todotxt.setup({ wiki_projects_dir = root .. "/wiki/projects/", wiki_ext = ".md" })
+      vim.api.nvim_set_current_buf(vim.api.nvim_create_buf(false, true))
+    end)
+
+    after_each(function()
+      vim.fn.delete(root, "rf")
+    end)
+
+    it("includes a Registro section in newly created pages", function()
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, { "+VRS_GSK write report" })
+      wiki.create_project()
+      local page = table.concat(vim.fn.readfile(root .. "/wiki/projects/VRS_GSK.md"), "\n")
+      assert.matches("## Registro", page)
+    end)
+  end)
 end)
