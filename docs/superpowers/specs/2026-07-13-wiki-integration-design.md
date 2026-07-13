@@ -1,7 +1,7 @@
 # Two-way wiki integration for todo.txt-vim
 
 Date: 2026-07-13
-Status: design approved, pending spec review
+Status: implemented
 Scope: nvim branch, Lua side only
 
 ## Overview

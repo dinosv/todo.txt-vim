@@ -9,6 +9,8 @@ Combines VimScript (sorting, priorities, mark-done) with Lua modules (recurring 
 
 ```
 todo.txt-vim/
+├── plugin/
+│   └── todotxt.lua       # Autocmd setup for wiki two-way integration
 ├── ftplugin/
 │   ├── todo.vim          # VimScript: keybindings, sorting, priorities, mark-done
 │   └── todo.lua          # Lua loader: sets up recurring, threshold, folding
@@ -19,6 +21,7 @@ todo.txt-vim/
 │   ├── recurrence.lua    # Recurring task logic (rec: tag)
 │   ├── threshold.lua     # Hidden/threshold task logic (t: and h:1 tags)
 │   ├── dependency.lua    # Task dependencies (id: and pending: tags)
+│   ├── wiki.lua          # Wiki navigation and two-way integration
 │   └── dates.lua         # Date arithmetic (add_days, add_weeks, add_months, parse_pattern)
 ├── syntax/todo.vim       # Syntax highlighting (priorities, contexts, projects, dates)
 ├── ftdetect/todo.vim     # Filetype detection (todo.txt, done.txt)
@@ -47,6 +50,11 @@ todo.txt-vim/
 | `-x` | Mark as done (triggers recurrence if rec: tag present) |
 | `-X` | Mark all as done |
 | `-D` | Move completed to done.txt |
+| `-wp` | Go to project wiki (todo.txt) |
+| `-wc` | Create project wiki (todo.txt) |
+| `-wl` | List project wiki status, `[stalled]` = no active task (todo.txt) |
+| `-wt` | Show this project's active tasks (wiki project pages) |
+| `-wa` | Capture a task for this project into todo.txt (wiki project pages) |
 
 ## Task format
 
@@ -168,6 +176,20 @@ Ver: `grep '+tag' ~/00000_DATA/00000_GITHUB/00000_SYNC/010_TODOTXT/todo.txt`
 +english           [no wiki]
 +casa              [no wiki]
 ```
+
+### Two-way integration
+
+- `-wt`/`-wa` are attached to buffers under `wiki_projects_dir` by a
+  `BufEnter` autocmd registered in `plugin/todotxt.lua` (re-registered by
+  `setup()`). The project tag is the filename stem.
+- `-wa` appends `<today> <text> +tag` to the loaded todo buffer if one
+  exists (left unsaved), else to the file on disk.
+- Completing a `+project` task (`-x`, visual `-x`, `-X`) appends
+  `- <date> x <task>` newest-first under `## Registro` in the project's
+  page. No page, no journal — pages are never auto-created. Disable with
+  `require("todotxt").setup({ wiki_journal = false })`.
+- `-wl` lists the union of buffer tags and wiki pages; `[stalled]` marks
+  projects with no active task (hidden/threshold tasks count as active).
 
 ### Implementation notes
 
