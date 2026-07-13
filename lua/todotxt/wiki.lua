@@ -79,6 +79,57 @@ function M.collect_tags(lines)
   return tags
 end
 
+local function is_completed(line)
+  return line:match("^[xX]%s") ~= nil
+end
+
+function M.collect_active_tags(lines)
+  local active_lines = {}
+  for _, line in ipairs(lines) do
+    if not is_completed(line) then
+      table.insert(active_lines, line)
+    end
+  end
+  return M.collect_tags(active_lines)
+end
+
+function M.active_tasks(lines, tag)
+  local out = {}
+  for i, line in ipairs(lines) do
+    if not is_completed(line) then
+      for t in iter_tags(line) do
+        if t == tag then
+          table.insert(out, { lnum = i, text = line })
+          break
+        end
+      end
+    end
+  end
+  return out
+end
+
+-- Lines of the todo file: the loaded buffer wins over the file on disk,
+-- so unsaved edits are respected. Returns nil when neither exists.
+local function todo_lines()
+  local cfg = config()
+  local bufnr = vim.fn.bufnr(cfg.todo_file)
+  if bufnr ~= -1 and vim.api.nvim_buf_is_loaded(bufnr) then
+    return vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  end
+  if vim.fn.filereadable(cfg.todo_file) == 1 then
+    return vim.fn.readfile(cfg.todo_file)
+  end
+  return nil
+end
+
+function M.tasks_for(tag)
+  local lines = todo_lines()
+  if not lines then
+    return nil
+  end
+  return M.active_tasks(lines, tag)
+end
+
 local function page_template(tag)
   return {
     "# " .. tag,
