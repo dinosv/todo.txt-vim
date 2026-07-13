@@ -138,29 +138,8 @@ function M.create_project()
   vim.cmd("tabedit " .. vim.fn.fnameescape(path))
 end
 
-function M.list_projects()
-  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-  local tags = M.collect_tags(lines)
-
-  if #tags == 0 then
-    vim.notify("No +tags found in buffer", vim.log.levels.INFO)
-    return
-  end
-
-  local display = {}
-  local max_len = 0
-  for _, tag in ipairs(tags) do
-    if #tag + 1 > max_len then
-      max_len = #tag + 1
-    end
-  end
-
-  for _, tag in ipairs(tags) do
-    local status = vim.fn.filereadable(project_path(tag)) == 1 and "[wiki exists]" or "[no wiki]"
-    local padded = "+" .. tag .. string.rep(" ", max_len - #tag) .. "  " .. status
-    table.insert(display, padded)
-  end
-
+-- Shared centred floating list. Callers add their own <CR> mapping.
+local function open_list_float(display, title)
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, display)
   vim.bo[buf].modifiable = false
@@ -184,7 +163,7 @@ function M.list_projects()
     col = col,
     style = "minimal",
     border = "rounded",
-    title = " Project Wiki Status ",
+    title = title,
     title_pos = "center",
   })
 
@@ -196,6 +175,35 @@ function M.list_projects()
 
   vim.keymap.set("n", "q", close, { buffer = buf })
   vim.keymap.set("n", "<Esc>", close, { buffer = buf })
+
+  return buf, win, close
+end
+
+function M.list_projects()
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local tags = M.collect_tags(lines)
+
+  if #tags == 0 then
+    vim.notify("No +tags found in buffer", vim.log.levels.INFO)
+    return
+  end
+
+  local display = {}
+  local max_len = 0
+  for _, tag in ipairs(tags) do
+    if #tag + 1 > max_len then
+      max_len = #tag + 1
+    end
+  end
+
+  for _, tag in ipairs(tags) do
+    local status = vim.fn.filereadable(project_path(tag)) == 1 and "[wiki exists]" or "[no wiki]"
+    local padded = "+" .. tag .. string.rep(" ", max_len - #tag) .. "  " .. status
+    table.insert(display, padded)
+  end
+
+  local buf, _, close = open_list_float(display, " Project Wiki Status ")
+
   vim.keymap.set("n", "<CR>", function()
     local cur = vim.api.nvim_get_current_line()
     local tag = cur:match("^%+(%S+)")
