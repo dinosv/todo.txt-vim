@@ -362,27 +362,68 @@ function M.capture_task()
   end)
 end
 
+function M.status_rows(buffer_lines, page_stems)
+  local active = {}
+  for _, t in ipairs(M.collect_active_tags(buffer_lines)) do
+    active[t] = true
+  end
+
+  local has_page = {}
+  for _, s in ipairs(page_stems) do
+    has_page[s] = true
+  end
+
+  local union = M.collect_tags(buffer_lines)
+  local seen = {}
+  for _, t in ipairs(union) do
+    seen[t] = true
+  end
+  for _, s in ipairs(page_stems) do
+    if not seen[s] then
+      table.insert(union, s)
+    end
+  end
+  table.sort(union)
+
+  local rows = {}
+  for _, t in ipairs(union) do
+    table.insert(rows, {
+      tag = t,
+      wiki = has_page[t] == true,
+      stalled = active[t] ~= true,
+    })
+  end
+  return rows
+end
+
 function M.list_projects()
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-  local tags = M.collect_tags(lines)
 
-  if #tags == 0 then
+  local stems = {}
+  for _, f in ipairs(vim.fn.glob(projects_dir() .. "*" .. config().wiki_ext, false, true)) do
+    table.insert(stems, vim.fn.fnamemodify(f, ":t:r"))
+  end
+
+  local rows = M.status_rows(lines, stems)
+  if #rows == 0 then
     vim.notify("No +tags found in buffer", vim.log.levels.INFO)
     return
   end
 
-  local display = {}
   local max_len = 0
-  for _, tag in ipairs(tags) do
-    if #tag + 1 > max_len then
-      max_len = #tag + 1
+  for _, r in ipairs(rows) do
+    if #r.tag + 1 > max_len then
+      max_len = #r.tag + 1
     end
   end
 
-  for _, tag in ipairs(tags) do
-    local status = vim.fn.filereadable(project_path(tag)) == 1 and "[wiki exists]" or "[no wiki]"
-    local padded = "+" .. tag .. string.rep(" ", max_len - #tag) .. "  " .. status
-    table.insert(display, padded)
+  local display = {}
+  for _, r in ipairs(rows) do
+    local status = r.wiki and "[wiki exists]" or "[no wiki]"
+    if r.stalled then
+      status = status .. " [stalled]"
+    end
+    table.insert(display, "+" .. r.tag .. string.rep(" ", max_len - #r.tag) .. "  " .. status)
   end
 
   local buf, _, close = open_list_float(display, " Project Wiki Status ")

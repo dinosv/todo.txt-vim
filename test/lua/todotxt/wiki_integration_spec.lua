@@ -419,4 +419,49 @@ describe("todotxt.wiki integration", function()
       assert.same({}, vim.fn.maparg("-wt", "n", false, true))
     end)
   end)
+
+  describe("status_rows", function()
+    it("marks tags with no active task as stalled and includes orphan pages", function()
+      local rows = wiki.status_rows(
+        {
+          "task +alive",
+          "x 2026-07-01 finished +finished_project",
+        },
+        { "alive", "orphan_page" }
+      )
+      assert.same({
+        { tag = "alive", wiki = true, stalled = false },
+        { tag = "finished_project", wiki = false, stalled = true },
+        { tag = "orphan_page", wiki = true, stalled = true },
+      }, rows)
+    end)
+  end)
+
+  describe("list_projects with stalled detection", function()
+    local root
+
+    before_each(function()
+      root = vim.fn.tempname()
+      vim.fn.mkdir(root .. "/wiki/projects", "p")
+      todotxt.setup({ wiki_projects_dir = root .. "/wiki/projects/", wiki_ext = ".md" })
+      vim.api.nvim_set_current_buf(vim.api.nvim_create_buf(false, true))
+    end)
+
+    after_each(function()
+      vim.fn.delete(root, "rf")
+    end)
+
+    it("shows [stalled] for an orphan wiki page", function()
+      vim.fn.writefile({ "# ghost" }, root .. "/wiki/projects/ghost.md")
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, { "task +alive" })
+
+      wiki.list_projects()
+
+      local float_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+      local joined = table.concat(float_lines, "\n")
+      assert.matches("%+ghost%s+%[wiki exists%] %[stalled%]", joined)
+      assert.matches("%+alive%s+%[no wiki%]\n", joined .. "\n")
+      vim.api.nvim_win_close(0, true)
+    end)
+  end)
 end)
