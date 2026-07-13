@@ -158,6 +158,31 @@ function M.insert_journal_entry(page_lines, entry)
   return out
 end
 
+-- Record a completed task in its project page. Never raises: journal
+-- failures must not block marking a task done.
+function M.journal_done(done_line)
+  if not config().wiki_journal then
+    return
+  end
+  local tag = M.extract_tag(done_line)
+  if not tag then
+    return
+  end
+  local path = project_path(tag)
+  if vim.fn.filereadable(path) ~= 1 then
+    return
+  end
+  local entry = M.journal_entry(done_line)
+  if not entry then
+    return
+  end
+  local page = vim.fn.readfile(path)
+  local ok, err = pcall(vim.fn.writefile, M.insert_journal_entry(page, entry), path)
+  if not ok then
+    vim.notify("todotxt: journal failed: " .. tostring(err), vim.log.levels.WARN)
+  end
+end
+
 local function page_template(tag)
   return {
     "# " .. tag,

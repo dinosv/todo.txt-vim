@@ -10,6 +10,7 @@ M.config = {
   threshold_highlight = true,
   wiki_projects_dir = vim.fn.expand("~/00000_DATA/00000_GITHUB/00000_SYNC/020_VIMWIKI/wiki/projects/"),
   wiki_ext = ".md",
+  wiki_journal = true,
   todo_file = vim.fn.expand("~/00000_DATA/00000_GITHUB/00000_SYNC/010_TODOTXT/todo.txt"),
 }
 

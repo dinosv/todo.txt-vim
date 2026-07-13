@@ -145,4 +145,48 @@ describe("todotxt.wiki integration", function()
       assert.matches("## Registro", page)
     end)
   end)
+
+  describe("journal_done", function()
+    local root
+
+    before_each(function()
+      root = vim.fn.tempname()
+      vim.fn.mkdir(root .. "/wiki/projects", "p")
+      todotxt.setup({
+        wiki_projects_dir = root .. "/wiki/projects/",
+        wiki_ext = ".md",
+        wiki_journal = true,
+      })
+    end)
+
+    after_each(function()
+      vim.fn.delete(root, "rf")
+      todotxt.setup({ wiki_journal = true })
+    end)
+
+    it("writes the entry under Registro in the project page", function()
+      vim.fn.writefile({ "# VRS_GSK", "", "## Registro" }, root .. "/wiki/projects/VRS_GSK.md")
+      wiki.journal_done("x 2026-07-13 enviar informe +VRS_GSK")
+      local page = vim.fn.readfile(root .. "/wiki/projects/VRS_GSK.md")
+      assert.equals("- 2026-07-13 x enviar informe +VRS_GSK", page[4])
+    end)
+
+    it("does nothing when the project has no wiki page", function()
+      wiki.journal_done("x 2026-07-13 tarea +nopage")
+      assert.equals(0, vim.fn.filereadable(root .. "/wiki/projects/nopage.md"))
+    end)
+
+    it("does nothing when wiki_journal is false", function()
+      vim.fn.writefile({ "# VRS_GSK" }, root .. "/wiki/projects/VRS_GSK.md")
+      todotxt.setup({ wiki_journal = false })
+      wiki.journal_done("x 2026-07-13 tarea +VRS_GSK")
+      assert.same({ "# VRS_GSK" }, vim.fn.readfile(root .. "/wiki/projects/VRS_GSK.md"))
+    end)
+
+    it("does nothing for a line without a project tag", function()
+      wiki.journal_done("x 2026-07-13 tarea sin proyecto")
+      -- nothing to assert beyond not erroring and no file appearing
+      assert.same({}, vim.fn.glob(root .. "/wiki/projects/*", false, true))
+    end)
+  end)
 end)
