@@ -189,4 +189,65 @@ describe("todotxt.wiki integration", function()
       assert.same({}, vim.fn.glob(root .. "/wiki/projects/*", false, true))
     end)
   end)
+
+  describe("journal wiring in ftplugin mappings", function()
+    local root
+
+    local function feed(keys)
+      local termcodes = vim.api.nvim_replace_termcodes(keys, true, false, true)
+      vim.api.nvim_feedkeys(termcodes, "x", false)
+    end
+
+    local function setup_todo_buffer(lines)
+      vim.g.maplocalleader = "-"
+      local buf = vim.api.nvim_create_buf(false, false)
+      vim.api.nvim_set_current_buf(buf)
+      vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+      vim.bo[buf].filetype = "todo"
+      return buf
+    end
+
+    before_each(function()
+      root = vim.fn.tempname()
+      vim.fn.mkdir(root .. "/wiki/projects", "p")
+      todotxt.setup({
+        wiki_projects_dir = root .. "/wiki/projects/",
+        wiki_ext = ".md",
+        wiki_journal = true,
+      })
+    end)
+
+    after_each(function()
+      vim.fn.delete(root, "rf")
+    end)
+
+    it("journals a task completed with normal -x", function()
+      vim.fn.writefile({ "# VRS_GSK", "", "## Registro" }, root .. "/wiki/projects/VRS_GSK.md")
+      setup_todo_buffer({ "enviar informe +VRS_GSK" })
+      feed("gg-x")
+      local page = vim.fn.readfile(root .. "/wiki/projects/VRS_GSK.md")
+      assert.matches("^%- %d%d%d%d%-%d%d%-%d%d x enviar informe %+VRS_GSK$", page[4])
+    end)
+
+    it("does not journal an already-completed line", function()
+      vim.fn.writefile({ "# VRS_GSK", "", "## Registro" }, root .. "/wiki/projects/VRS_GSK.md")
+      setup_todo_buffer({ "x 2026-07-01 ya hecho +VRS_GSK" })
+      feed("gg-x")
+      assert.equals(3, #vim.fn.readfile(root .. "/wiki/projects/VRS_GSK.md"))
+    end)
+
+    it("journals every task completed with -X", function()
+      vim.fn.writefile({ "# alpha", "", "## Registro" }, root .. "/wiki/projects/alpha.md")
+      setup_todo_buffer({ "uno +alpha", "dos +alpha" })
+      feed("-X")
+      assert.equals(5, #vim.fn.readfile(root .. "/wiki/projects/alpha.md"))
+    end)
+
+    it("journals tasks completed with visual -x", function()
+      vim.fn.writefile({ "# alpha", "", "## Registro" }, root .. "/wiki/projects/alpha.md")
+      setup_todo_buffer({ "uno +alpha", "dos +alpha" })
+      feed("ggVj-x")
+      assert.equals(5, #vim.fn.readfile(root .. "/wiki/projects/alpha.md"))
+    end)
+  end)
 end)

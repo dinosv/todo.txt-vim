@@ -7,6 +7,7 @@ end
 local todotxt = require("todotxt")
 local threshold = require("todotxt.threshold")
 local dependency = require("todotxt.dependency")
+local wiki = require("todotxt.wiki")
 
 -- Mark done mapping
 vim.keymap.set("n", "<localleader>x", function()
@@ -16,6 +17,10 @@ vim.keymap.set("n", "<localleader>x", function()
   local done, new_task = todotxt.mark_done(line)
 
   vim.api.nvim_buf_set_lines(0, lnum - 1, lnum, false, { done })
+
+  if done ~= line then
+    pcall(wiki.journal_done, done)
+  end
 
   if new_task then
     vim.api.nvim_buf_set_lines(0, lnum, lnum, false, { new_task })
@@ -47,6 +52,9 @@ vim.keymap.set("v", "<localleader>x", function()
   for _, line in ipairs(lines) do
     local done, new_task = todotxt.mark_done(line)
     table.insert(result, done)
+    if done ~= line then
+      pcall(wiki.journal_done, done)
+    end
     if new_task then
       table.insert(new_tasks, new_task)
     end
@@ -71,6 +79,7 @@ vim.keymap.set("n", "<localleader>X", function()
     else
       local done, new_task = todotxt.mark_done(line)
       table.insert(result, done)
+      pcall(wiki.journal_done, done)
       if new_task then
         table.insert(new_tasks, new_task)
       end
@@ -223,7 +232,6 @@ vim.keymap.set("v", "<localleader>sd", visual_sort_with_hidden(":call todo#txt#s
 vim.keymap.set("v", "<localleader>sdd", visual_sort_with_hidden(":call todo#txt#sort_by_due_date()"), { buffer = true })
 
 -- Wiki navigation
-local wiki = require("todotxt.wiki")
 vim.keymap.set("n", "<localleader>wp", wiki.goto_project, { buffer = true, desc = "Go to project wiki" })
 vim.keymap.set("n", "<localleader>wc", wiki.create_project, { buffer = true, desc = "Create project wiki" })
 vim.keymap.set("n", "<localleader>wl", wiki.list_projects, { buffer = true, desc = "List project wiki status" })
