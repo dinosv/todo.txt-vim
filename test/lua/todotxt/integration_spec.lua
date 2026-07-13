@@ -33,6 +33,14 @@ describe("todotxt integration", function()
       assert.is_true(threshold.is_hidden(new))
     end)
 
+    it("returns an already-completed task unchanged", function()
+      local task = "x 2025-01-01 Pay rent due:2025-01-15 rec:+1m"
+      local done, new = todotxt.mark_done(task)
+
+      assert.equals(task, done)
+      assert.is_nil(new)
+    end)
+
     it("handles strict recurrence", function()
       local task = "(A) Pay rent due:2025-01-15 rec:+1m"
       local done, new = todotxt.mark_done(task)

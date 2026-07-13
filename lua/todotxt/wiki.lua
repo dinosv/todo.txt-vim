@@ -4,17 +4,32 @@ local function config()
   return require("todotxt").config
 end
 
+-- Normalised projects directory: ~ expanded, trailing slash guaranteed.
+local function projects_dir()
+  local dir = vim.fn.expand(config().wiki_projects_dir)
+  if not dir:match("/$") then
+    dir = dir .. "/"
+  end
+  return dir
+end
+
+local function project_path(tag)
+  return projects_dir() .. tag .. config().wiki_ext
+end
+
 local function add_to_index(tag)
   local cfg = config()
-  local index_path = cfg.wiki_projects_dir:gsub("projects/$", "") .. "index" .. cfg.wiki_ext
+  local wiki_root = vim.fn.fnamemodify(projects_dir():gsub("/$", ""), ":h")
+  local index_path = wiki_root .. "/index" .. cfg.wiki_ext
   if vim.fn.filereadable(index_path) ~= 1 then return end
 
   local lines = vim.fn.readfile(index_path)
   local link_entry = "- [" .. tag .. "](projects/" .. tag .. ")"
 
-  -- Check if already listed
+  -- Check if already listed; the closing paren keeps a tag that is a
+  -- prefix of an indexed tag (VRS vs VRS_GSK) from matching.
   for _, l in ipairs(lines) do
-    if l:find(tag, 1, true) and l:find("projects/" .. tag, 1, true) then
+    if l:find("(projects/" .. tag .. ")", 1, true) then
       return
     end
   end
@@ -38,8 +53,60 @@ local function add_to_index(tag)
   end
 end
 
+-- A project tag is a whitespace-delimited word starting with '+', so
+-- key:+value tags such as rec:+1w are not project tags. The prepended
+-- space lets one pattern also cover tags at the start of the line.
+local function iter_tags(line)
+  return (" " .. line):gmatch("%s%+(%S+)")
+end
+
 function M.extract_tag(line)
-  return line:match("%+(%S+)")
+  return iter_tags(line)()
+end
+
+function M.collect_tags(lines)
+  local tags = {}
+  local seen = {}
+  for _, line in ipairs(lines) do
+    for tag in iter_tags(line) do
+      if not seen[tag] then
+        seen[tag] = true
+        table.insert(tags, tag)
+      end
+    end
+  end
+  table.sort(tags)
+  return tags
+end
+
+local function page_template(tag)
+  return {
+    "# " .. tag,
+    "",
+    "## Contexto",
+    "Descripcion breve. Cliente, objetivo, alcance.",
+    "",
+    "## Acciones activas",
+    "Ver: `grep '+" .. tag .. "' " .. config().todo_file .. "`",
+    "",
+    "## Notas y decisiones",
+    "",
+    "## Referencias",
+  }
+end
+
+-- Create the wiki page for tag if missing, then return its path.
+local function ensure_page(tag)
+  local path = project_path(tag)
+  if vim.fn.filereadable(path) ~= 1 then
+    local dir = projects_dir()
+    if vim.fn.isdirectory(dir) == 0 then
+      vim.fn.mkdir(dir, "p")
+    end
+    vim.fn.writefile(page_template(tag), path)
+    add_to_index(tag)
+  end
+  return path
 end
 
 function M.goto_project()
@@ -50,8 +117,7 @@ function M.goto_project()
     return
   end
 
-  local cfg = config()
-  local path = cfg.wiki_projects_dir .. tag .. cfg.wiki_ext
+  local path = project_path(tag)
 
   if vim.fn.filereadable(path) == 1 then
     vim.cmd("tabedit " .. vim.fn.fnameescape(path))
@@ -68,57 +134,19 @@ function M.create_project()
     return
   end
 
-  local cfg = config()
-  local path = cfg.wiki_projects_dir .. tag .. cfg.wiki_ext
-
-  if vim.fn.filereadable(path) ~= 1 then
-    local dir = cfg.wiki_projects_dir
-    if vim.fn.isdirectory(dir) == 0 then
-      vim.fn.mkdir(dir, "p")
-    end
-
-    local template = {
-      "# " .. tag,
-      "",
-      "## Contexto",
-      "Descripcion breve. Cliente, objetivo, alcance.",
-      "",
-      "## Acciones activas",
-      "Ver: `grep '+" .. tag .. "' " .. cfg.todo_file .. "`",
-      "",
-      "## Notas y decisiones",
-      "",
-      "## Referencias",
-    }
-    vim.fn.writefile(template, path)
-    add_to_index(tag)
-  end
-
+  local path = ensure_page(tag)
   vim.cmd("tabedit " .. vim.fn.fnameescape(path))
 end
 
 function M.list_projects()
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-  local tags = {}
-  local seen = {}
-
-  for _, line in ipairs(lines) do
-    for tag in line:gmatch("%+(%S+)") do
-      if not seen[tag] then
-        seen[tag] = true
-        table.insert(tags, tag)
-      end
-    end
-  end
-
-  table.sort(tags)
+  local tags = M.collect_tags(lines)
 
   if #tags == 0 then
     vim.notify("No +tags found in buffer", vim.log.levels.INFO)
     return
   end
 
-  local cfg = config()
   local display = {}
   local max_len = 0
   for _, tag in ipairs(tags) do
@@ -128,8 +156,7 @@ function M.list_projects()
   end
 
   for _, tag in ipairs(tags) do
-    local path = cfg.wiki_projects_dir .. tag .. cfg.wiki_ext
-    local status = vim.fn.filereadable(path) == 1 and "[wiki exists]" or "[no wiki]"
+    local status = vim.fn.filereadable(project_path(tag)) == 1 and "[wiki exists]" or "[no wiki]"
     local padded = "+" .. tag .. string.rep(" ", max_len - #tag) .. "  " .. status
     table.insert(display, padded)
   end
@@ -174,27 +201,7 @@ function M.list_projects()
     local tag = cur:match("^%+(%S+)")
     if not tag then return end
     close()
-    local path = cfg.wiki_projects_dir .. tag .. cfg.wiki_ext
-    if vim.fn.filereadable(path) ~= 1 then
-      if vim.fn.isdirectory(cfg.wiki_projects_dir) == 0 then
-        vim.fn.mkdir(cfg.wiki_projects_dir, "p")
-      end
-      local template = {
-        "# " .. tag,
-        "",
-        "## Contexto",
-        "Descripcion breve. Cliente, objetivo, alcance.",
-        "",
-        "## Acciones activas",
-        "Ver: `grep '+" .. tag .. "' " .. cfg.todo_file .. "`",
-        "",
-        "## Notas y decisiones",
-        "",
-        "## Referencias",
-      }
-      vim.fn.writefile(template, path)
-      add_to_index(tag)
-    end
+    local path = ensure_page(tag)
     vim.cmd("tabedit " .. vim.fn.fnameescape(path))
   end, { buffer = buf })
 end

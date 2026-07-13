@@ -107,7 +107,9 @@ function M.diff_days(from_date, to_date)
   local t1 = os.time({ year = y1, month = m1, day = d1 })
   local t2 = os.time({ year = y2, month = m2, day = d2 })
 
-  return math.floor((t2 - t1) / 86400)
+  -- Round instead of floor: a DST transition inside the interval makes
+  -- it up to an hour short of (or beyond) a whole number of days.
+  return math.floor((t2 - t1) / 86400 + 0.5)
 end
 
 return M

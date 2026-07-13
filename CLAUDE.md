@@ -59,7 +59,7 @@ todo.txt-vim/
 - `due:YYYY-MM-DD`: Due date. Overdue dates (past due, active tasks only) highlighted with `TodoOverdue` (red background, via extmarks in `ftplugin/todo.lua`).
 - `t:YYYY-MM-DD`: Threshold date (task hidden until this date).
 - `rec:+1w`: Recurrence pattern (strict mode with `+`).
-- `wf:1`: Waiting-for flag. Entire line highlighted with `TodoWaitingFor` (linked to `DiagnosticWarn`). Defined in `syntax/todo.vim`. Task keeps its position (not folded/hidden).
+- `wf:1`: Waiting-for flag. Entire line highlighted with `TodoWaitingFor` (linked to `DiagnosticWarn`), active tasks only — completed lines keep `TodoDone`. Defined in `syntax/todo.vim`. Task keeps its position (not folded/hidden).
 - `h:1`: Hidden flag. Entire line highlighted with `TodoHidden` (linked to `Comment`). Defined in `ftplugin/todo.lua` via extmarks. Task is folded and sorted to bottom.
 - `id:N`: Task identifier used as a dependency anchor. User-assigned; the plugin never generates or renames IDs.
 - `pid:N,M,...`: Task blocked until every listed `id:` refers to a line that is either completed (`x ...`) or absent. While any blocker stays active, the plugin stamps `wf:1` (ensuring the `TodoWaitingFor` highlight) and prepends `(D)` if no priority is set. When all blockers resolve, the `wf:1` flips to `wf:0`; priority is not touched — a `(D)` that the plugin added stays on the line until you promote it manually. Logic in `lua/todotxt/dependency.lua`, autocmd in `ftplugin/todo.lua`.
@@ -88,7 +88,7 @@ Defined in `syntax/todo.vim`. Key highlight groups:
 - Level 2: completed (`x `) and hidden (`h:1`, future `t:`) tasks. Folded on buffer entry.
 - Level 0: active tasks with no `@context`. Never folded.
 
-Buffer-local `foldlevel = 1` is set in `ftplugin/todo.lua` so level-1 opens on entry while level-2 stays closed. `foldlevelstart` is global and deliberately not touched.
+Buffer-local `foldlevel = 1` is set in `ftplugin/todo.lua` so level-1 opens on entry while level-2 stays closed (`foldlevel = 0` when `threshold_fold = false`, whose legacy foldexpr puts completed tasks at level 1). `foldlevelstart` is global and deliberately not touched.
 
 The `-s@` sort groups same-context tasks into contiguous blocks, which is the workflow this folding is designed around. Fold headers are category-aware: `+-- @UDD  N tasks`, `+-- N completed tasks`, `+-- N hidden tasks`.
 

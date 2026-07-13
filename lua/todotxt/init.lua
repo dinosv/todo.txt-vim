@@ -92,6 +92,10 @@ function M.fold_expr(lnum)
 end
 
 function M.mark_done(line)
+  if line:match("^[xX]%s") then
+    return line, nil
+  end
+
   -- Strip existing priority
   local priority = line:match("^%((%a)%)")
   local task = line:gsub("^%(%a%)%s*", "")

@@ -37,7 +37,14 @@ vnoremap <script> <silent> <buffer> <localleader>d :call todo#txt#replace_date()
 " Remove completed {{{2
 nnoremap <script> <silent> <buffer> <localleader>D :call todo#txt#remove_completed()<CR>
 
-" Sorting, folding, mark-done, and mark-all-done are provided by ftplugin/todo.lua
+" Sorting, folding, mark-done, and mark-all-done are provided by
+" ftplugin/todo.lua, which only Neovim >= 0.7 sources. Warn instead of
+" silently dropping those features elsewhere.
+if !has('nvim-0.7')
+    echohl WarningMsg
+    echomsg 'todo.txt-vim (nvim branch): sorting, folding and mark-done require Neovim >= 0.7'
+    echohl None
+endif
 
 " Restore context {{{1
 let &cpo = s:save_cpo

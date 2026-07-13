@@ -178,5 +178,16 @@ describe("todotxt.dates", function()
     it("returns zero for same date", function()
       assert.equals(0, dates.diff_days("2025-01-15", "2025-01-15"))
     end)
+
+    it("counts days exactly across a DST spring-forward", function()
+      local old_tz = vim.env.TZ
+      -- Chile springs forward on 2026-09-06, leaving the interval one
+      -- hour short of nine full days in wall-clock seconds.
+      vim.env.TZ = "America/Santiago"
+      local ok, diff = pcall(dates.diff_days, "2026-09-01", "2026-09-10")
+      vim.env.TZ = old_tz
+      assert.is_true(ok)
+      assert.equals(9, diff)
+    end)
   end)
 end)

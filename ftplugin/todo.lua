@@ -22,10 +22,23 @@ vim.keymap.set("n", "<localleader>x", function()
   end
 end, { buffer = true, desc = "Mark todo as done" })
 
+-- The '< and '> marks are not updated until visual mode is left, and a
+-- Lua callback mapping runs while the selection is still active, so the
+-- live endpoints (v and .) must be read instead.
+local function visual_range()
+  local start_line = vim.fn.line("v")
+  local end_line = vim.fn.line(".")
+  if start_line > end_line then
+    start_line, end_line = end_line, start_line
+  end
+  local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
+  vim.api.nvim_feedkeys(esc, "nx", false)
+  return start_line, end_line
+end
+
 -- Visual mode mark done mapping
 vim.keymap.set("v", "<localleader>x", function()
-  local start_line = vim.fn.line("'<")
-  local end_line = vim.fn.line("'>")
+  local start_line, end_line = visual_range()
 
   local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
   local result = {}
@@ -168,7 +181,11 @@ update_pending()
 vim.opt_local.foldmethod = "expr"
 vim.opt_local.foldexpr = "v:lua.require('todotxt').fold_expr(v:lnum)"
 vim.opt_local.foldtext = "v:lua.require('todotxt').fold_text()"
-vim.opt_local.foldlevel = 1
+-- With threshold_fold the context folds (level 1) open on entry and
+-- completed/hidden folds (level 2) stay closed. The legacy fallback
+-- foldexpr puts completed tasks at level 1, so it needs foldlevel 0
+-- for them to start closed.
+vim.opt_local.foldlevel = todotxt.config.threshold_fold and 1 or 0
 
 -- Sort and move hidden to bottom
 local function sort_with_hidden(sort_cmd)
@@ -189,8 +206,7 @@ vim.keymap.set("n", "<localleader>sdd", sort_with_hidden(":%call todo#txt#sort_b
 -- Visual mode sort and move hidden to bottom within selection
 local function visual_sort_with_hidden(sort_cmd)
   return function()
-    local start_line = vim.fn.line("'<")
-    local end_line = vim.fn.line("'>")
+    local start_line, end_line = visual_range()
 
     -- Execute original sort on range
     vim.cmd(start_line .. "," .. end_line .. sort_cmd:gsub("^:%%", ""))
