@@ -328,6 +328,40 @@ function M.show_tasks()
   end, { buffer = buf })
 end
 
+function M.build_capture_line(text, tag)
+  return dates.today() .. " " .. text .. " +" .. tag
+end
+
+-- -wa in a wiki project page: capture a task into todo.txt with the
+-- creation date and project tag added automatically.
+function M.capture_task()
+  local tag = vim.fn.expand("%:t:r")
+  if tag == "" then
+    vim.notify("Not in a project page", vim.log.levels.WARN)
+    return
+  end
+
+  vim.ui.input({ prompt = "New task for +" .. tag .. ": " }, function(input)
+    if not input or input:match("^%s*$") then
+      return
+    end
+    local line = M.build_capture_line(vim.trim(input), tag)
+    local cfg = config()
+    local bufnr = vim.fn.bufnr(cfg.todo_file)
+    if bufnr ~= -1 and vim.api.nvim_buf_is_loaded(bufnr) then
+      vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { line })
+      vim.notify("Added to todo buffer (unsaved): " .. line, vim.log.levels.INFO)
+    else
+      local ok, err = pcall(vim.fn.writefile, { line }, cfg.todo_file, "a")
+      if ok then
+        vim.notify("Appended to " .. cfg.todo_file .. ": " .. line, vim.log.levels.INFO)
+      else
+        vim.notify("todotxt: capture failed: " .. tostring(err), vim.log.levels.WARN)
+      end
+    end
+  end)
+end
+
 function M.list_projects()
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   local tags = M.collect_tags(lines)

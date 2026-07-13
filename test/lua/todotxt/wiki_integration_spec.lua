@@ -305,4 +305,82 @@ describe("todotxt.wiki integration", function()
       assert.equals(2, vim.api.nvim_win_get_cursor(0)[1])
     end)
   end)
+
+  describe("capture_task", function()
+    local root
+    local orig_input
+
+    -- Stub vim.ui.input to immediately answer with `reply`.
+    local function stub_input(reply)
+      vim.ui.input = function(_, cb)
+        cb(reply)
+      end
+    end
+
+    before_each(function()
+      root = vim.fn.tempname()
+      vim.fn.mkdir(root .. "/wiki/projects", "p")
+      vim.fn.writefile({ "# alpha" }, root .. "/wiki/projects/alpha.md")
+      todotxt.setup({
+        wiki_projects_dir = root .. "/wiki/projects/",
+        wiki_ext = ".md",
+        todo_file = root .. "/todo.txt",
+      })
+      vim.cmd("edit " .. vim.fn.fnameescape(root .. "/wiki/projects/alpha.md"))
+      orig_input = vim.ui.input
+    end)
+
+    after_each(function()
+      vim.ui.input = orig_input
+      vim.fn.delete(root, "rf")
+    end)
+
+    it("builds the line as date, text, tag", function()
+      local dates = require("todotxt.dates")
+      assert.equals(
+        dates.today() .. " llamar al cliente +alpha",
+        wiki.build_capture_line("llamar al cliente", "alpha")
+      )
+    end)
+
+    it("appends to the file on disk when no todo buffer is loaded", function()
+      vim.fn.writefile({ "existing task" }, root .. "/todo.txt")
+      stub_input("nueva tarea")
+      wiki.capture_task()
+      local lines = vim.fn.readfile(root .. "/todo.txt")
+      assert.equals(2, #lines)
+      assert.matches("nueva tarea %+alpha$", lines[2])
+    end)
+
+    it("creates the todo file when it does not exist", function()
+      stub_input("primera tarea")
+      wiki.capture_task()
+      assert.matches("primera tarea %+alpha$", vim.fn.readfile(root .. "/todo.txt")[1])
+    end)
+
+    it("appends to the loaded todo buffer and leaves it unsaved", function()
+      vim.fn.writefile({ "existing task" }, root .. "/todo.txt")
+      vim.cmd("edit " .. vim.fn.fnameescape(root .. "/todo.txt"))
+      local todo_buf = vim.api.nvim_get_current_buf()
+      vim.cmd("edit " .. vim.fn.fnameescape(root .. "/wiki/projects/alpha.md"))
+
+      stub_input("desde el buffer")
+      wiki.capture_task()
+
+      local lines = vim.api.nvim_buf_get_lines(todo_buf, 0, -1, false)
+      assert.matches("desde el buffer %+alpha$", lines[#lines])
+      assert.is_true(vim.bo[todo_buf].modified)
+      -- file on disk untouched
+      assert.equals(1, #vim.fn.readfile(root .. "/todo.txt"))
+      vim.cmd("bwipeout! " .. todo_buf)
+    end)
+
+    it("does nothing on empty or cancelled input", function()
+      stub_input("")
+      wiki.capture_task()
+      stub_input(nil)
+      wiki.capture_task()
+      assert.equals(0, vim.fn.filereadable(root .. "/todo.txt"))
+    end)
+  end)
 end)
