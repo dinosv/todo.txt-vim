@@ -176,10 +176,15 @@ function M.journal_done(done_line)
   if not entry then
     return
   end
-  local page = vim.fn.readfile(path)
-  local ok, err = pcall(vim.fn.writefile, M.insert_journal_entry(page, entry), path)
+  local ok, err = pcall(vim.fn.readfile, path)
   if not ok then
     vim.notify("todotxt: journal failed: " .. tostring(err), vim.log.levels.WARN)
+    return
+  end
+  local page = err
+  local ok_write, write_err = pcall(vim.fn.writefile, M.insert_journal_entry(page, entry), path)
+  if not ok_write then
+    vim.notify("todotxt: journal failed: " .. tostring(write_err), vim.log.levels.WARN)
   end
 end
 
