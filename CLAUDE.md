@@ -83,6 +83,9 @@ Defined in `syntax/todo.vim`. Key highlight groups:
 | `TodoPriorityA` | `Constant` | Priority (A) tasks |
 | `TodoPriorityB` | `Statement` | Priority (B) tasks |
 | `TodoPriorityC` | `Identifier` | Priority (C) tasks |
+| `TodoDate` | `Type` | Dates (creation, `due:`, `t:`) |
+| `TodoProject` | `Special` | `+project` tags |
+| `TodoContext` | `String` | `@context` tags |
 | `TodoHidden` | `Comment` | Hidden/threshold tasks (via extmarks in `ftplugin/todo.lua`) |
 | `TodoOverdue` | `#592222` bg / `#ff6666` fg | Overdue `due:` dates on active tasks (via extmarks in `ftplugin/todo.lua`) |
 

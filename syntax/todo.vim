@@ -34,8 +34,8 @@ highlight  default  link  TodoPriorityC  Identifier
 " (D) is stamped on blocked tasks by lua/todotxt/dependency.lua, so it
 " gets a default colour to stay distinguishable once wf: flips to 0.
 highlight  default  link  TodoPriorityD  DiagnosticHint
-highlight  default  link  TodoDate       PreProc
+highlight  default  link  TodoDate       Type
 highlight  default  link  TodoProject    Special
-highlight  default  link  TodoContext    Special
+highlight  default  link  TodoContext    String
 
 let b:current_syntax = "todo"
